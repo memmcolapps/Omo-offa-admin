@@ -14,12 +14,10 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`bg-[#F3FFF2] top-0 w-[100vw] py-[2.5rem] items-center transition-all duration-500 ease-in-out ${
-        scrollY > 100
-      }`}
+      className={`bg-[#F3FFF2] top-0 w-[100vw] py-[2.5rem] items-center transition-all duration-500 ease-in-out`}
     >
       <MaxContainer>
-        <div className="flex justify-between max-w-[130rem] mx-auto px-[7rem] sm:px-[2.5rem]">
+        <div className="flex justify-between max-w-[130rem] mx-auto px-[7rem] ">
           <Link href={"/"}>
             <Image
               width={87}
@@ -32,7 +30,7 @@ const Navbar = () => {
 
           <Button
             asChild
-            className="font-[700] bg-white text-[#003525] hover:bg-[#002E20] hover:text-white px-[2rem] py-[1.8rem] rounded-[.7rem] "
+            className="font-[700] text-[1.2rem] bg-white text-[#003525] hover:bg-[#002E20] hover:text-white px-[2rem] py-[1.8rem] rounded-[.7rem] "
           >
             <Link href={"/"}>Contact Us</Link>
           </Button>
