@@ -17,6 +17,7 @@ import useLogin from "@/app/hooks/useLogin";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
+import Navbar from "./homeNavbar";
 
 const formSchema = z.object({
   email: z.string().min(1, "Email is required"),
@@ -55,6 +56,7 @@ const Login = () => {
   return (
     <>
       <ToastContainer />
+      <Navbar />
       <div className="mx-auto w-fit pt-[15rem]">
         <p className="font-[800] text-[2rem] text-[#07200B] text-center mb-[1.5rem]">
           Admin Login

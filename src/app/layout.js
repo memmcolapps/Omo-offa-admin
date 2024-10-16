@@ -1,7 +1,6 @@
 import localFont from "next/font/local";
 import "./globals.css";
 import { Manrope } from "next/font/google";
-import Navbar from "./components/common/navbar";
 
 // Import Manrope from Google Fonts
 const manrope = Manrope({
@@ -17,10 +16,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${manrope.className} antialiased`}>
-        <Navbar />
-        {children}
-      </body>
+      <body className={`${manrope.className} antialiased`}>{children}</body>
     </html>
   );
 }
