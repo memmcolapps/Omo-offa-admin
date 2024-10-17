@@ -7,14 +7,12 @@ import { Button } from "../ui/button";
 
 const Navbar = ({ pageName, loggedInUser }) => {
   return (
-    <nav
-      className={`bg-[#F3FFF2] top-0 w-[100vw] py-[2.5rem] items-center transition-all duration-500 ease-in-out`}
-    >
+    <nav className="bg-[#F3FFF2] top-0 w-full py-[2.5rem] items-center transition-all duration-500 ease-in-out">
       <MaxContainer>
-        <div className="flex justify-between max-w-[130rem] mx-auto px-[7rem] ">
-          <p className="font-[700]">{pageName}</p>
+        <div className="flex justify-between max-w-[130rem] mx-auto px-[2rem] lg:px-[7rem]">
+          <p className="font-[700] text-xl">{pageName}</p>
 
-          <div className="flex items-center ">
+          <div className="flex items-center">
             <p className="text-[1.2rem] mx-5">
               {loggedInUser?.email ?? "Admin"}
             </p>
