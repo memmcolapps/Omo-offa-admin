@@ -4,7 +4,7 @@ import Image from "next/image";
 import MaxContainer from "../common/maxcontainer";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 
-const PendingUserTable = ({ data, status }) => {
+const ApprovedUserTable = ({ data }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState("");
 
@@ -51,12 +51,13 @@ const PendingUserTable = ({ data, status }) => {
             <tr className="text-black text-[1rem]">
               <th className="py-4 px-6">Name</th>
               <th className="py-4 px-6">OffaNimID</th>
-              <th className="py-4 px-6">Email</th>
+              <th className="py-4 px-6">NIN</th>
               <th className="py-4 px-6">Status</th>
               <th className="py-4 px-6">State Of Residence</th>
               <th className="py-4 px-6">Ward Name</th>
               <th className="py-4 px-6">Compound Name</th>
-              <th className="py-4 px-6">phone Number</th>
+              <th className="py-4 px-6">Phone Number</th>
+              <th className="py-4 px-6">ID CARD Payment</th>
               <th className="py-4 px-6">Date Added</th>
             </tr>
           </thead>
@@ -74,15 +75,9 @@ const PendingUserTable = ({ data, status }) => {
                   {user.firstName} {user.middleName} {user.lastName}
                 </td>
                 <td className="py-4 px-6">{user.offaNimiId}</td>
-                <td className="py-4 px-6">{user.email}</td>
+                <td className="py-4 px-6">{user.nin}</td>
                 <td className="py-4 px-6">
-                  <span
-                    className={`px-[1rem] py-2 rounded-full text-xs ${
-                      status === "PENDING"
-                        ? "bg-[#FFF1B8] text-[#763201]"
-                        : "bg-[#FFE8E0] text-[#C50700]"
-                    } `}
-                  >
+                  <span className="bg-[#D5FFF2] text-[#007A55] px-2 py-1 rounded-full text-xs">
                     {user.verificationStatus}
                   </span>
                 </td>
@@ -90,7 +85,7 @@ const PendingUserTable = ({ data, status }) => {
                 <td className="py-4 px-6">{user.wardName}</td>
                 <td className="py-4 px-6">{user.phoneNumber}</td>
                 <td className="py-4 px-6">{user.compoundName}</td>
-
+                <td className="py-4 px-6">{user.idPayment.toString()}</td>
                 <td className="py-4 px-6">
                   {new Date(user.createdAt).toLocaleDateString()}
                 </td>
@@ -142,14 +137,13 @@ const PendingUserTable = ({ data, status }) => {
   ) : (
     <div className="flex justify-center items-center">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-800">No {status} Users</h1>
+        <h1 className="text-2xl font-bold text-gray-800">No Approved Users</h1>
         <p className="text-gray-600">
-          There are no {status.toLowerCase()} users at the moment. Please check
-          back later.
+          There are no Approved users at the moment. Please check back later.
         </p>
       </div>
     </div>
   );
 };
 
-export default PendingUserTable;
+export default ApprovedUserTable;

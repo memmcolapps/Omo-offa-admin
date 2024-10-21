@@ -27,6 +27,7 @@
     "react-dom": "^18",
     "react-hook-form": "^7.53.0",
     "react-toastify": "^10.0.5",
+    "recharts": "^2.13.0",
     "sass": "^1.79.2",
     "scss": "^0.2.4",
     "tailwind-merge": "^2.5.4",

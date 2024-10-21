@@ -10,7 +10,7 @@ const PendingUsers = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    getUsers("APPROVED", token);
+    getUsers("PENDING", token);
     console.log(data);
   }, []);
   return (
@@ -18,7 +18,7 @@ const PendingUsers = () => {
       <Sidebar />
       <div className="flex-grow overflow-auto">
         <Navbar pageName={"Pending Users"} />
-        <PendingUserTable data={data.users ?? []} />
+        <PendingUserTable data={data.users ?? []} status={"PENDING"} />
       </div>
     </div>
   );
