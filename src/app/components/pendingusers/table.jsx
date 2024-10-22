@@ -1,10 +1,13 @@
 "use client";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import MaxContainer from "../common/maxcontainer";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 
 const PendingUserTable = ({ data, status }) => {
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState("");
 
@@ -29,6 +32,13 @@ const PendingUserTable = ({ data, status }) => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }
+  };
+
+  const handleRowClick = (user) => {
+    // router.push(`/Pending-Users/user`, { state: { user } });
+
+    const userEncoded = encodeURIComponent(JSON.stringify(user)); // Convert user object to a string
+    router.push(`/Pending-Users/user?user=${userEncoded}`);
   };
 
   return data.length > 0 ? (
@@ -62,7 +72,11 @@ const PendingUserTable = ({ data, status }) => {
           </thead>
           <tbody className="text-[1.2rem]">
             {currentUsers.map((user, index) => (
-              <tr key={index} className="border-t hover:bg-gray-50">
+              <tr
+                key={index}
+                className="border-t hover:bg-gray-50 cursor-pointer"
+                onClick={() => handleRowClick(user)}
+              >
                 <td className="py-4 px-6 flex items-center">
                   <Image
                     src="/home/offa_logo.svg"
