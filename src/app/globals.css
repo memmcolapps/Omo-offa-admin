@@ -9,6 +9,7 @@ html {
 @media screen and (max-width: 600px) {
   html {
     font-size: 2.66vw;
+    display: none;
   }
 }
 
