@@ -88,9 +88,8 @@ const PendingUserTable = ({ data, status }) => {
                 </td>
                 <td className="py-4 px-6">{user.stateOfResidence}</td>
                 <td className="py-4 px-6">{user.wardName}</td>
-                <td className="py-4 px-6">{user.phoneNumber}</td>
                 <td className="py-4 px-6">{user.compoundName}</td>
-
+                <td className="py-4 px-6">{user.phoneNumber}</td>
                 <td className="py-4 px-6">
                   {new Date(user.createdAt).toLocaleDateString()}
                 </td>
