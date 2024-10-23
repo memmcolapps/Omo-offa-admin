@@ -12,7 +12,7 @@ const PendingUsers = () => {
     const token = localStorage.getItem("token");
     getUsers("PENDING", token);
     console.log(data);
-  }, []);
+  });
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />

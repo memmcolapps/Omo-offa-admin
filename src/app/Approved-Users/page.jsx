@@ -12,7 +12,7 @@ const ApprovedUsers = () => {
     const token = localStorage.getItem("token");
     getUsers("APPROVED", token);
     console.log(data);
-  }, []);
+  });
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
