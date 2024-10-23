@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { Suspense, useEffect, useState } from "react";
 import Sidebar from "../../components/common/sidebar";
 import UserProfileForm from "../../components/pendingusers/userinfo";
 import Navbar from "@/app/components/common/navbar";

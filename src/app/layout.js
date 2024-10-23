@@ -1,6 +1,7 @@
 import localFont from "next/font/local";
 import "./globals.css";
 import { Manrope } from "next/font/google";
+import { Suspense } from "react";
 
 // Import Manrope from Google Fonts
 const manrope = Manrope({
@@ -16,7 +17,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${manrope.className} antialiased`}>{children}</body>
+      <body className={`${manrope.className} antialiased`}>
+        <Suspense>{children}</Suspense>
+      </body>
     </html>
   );
 }

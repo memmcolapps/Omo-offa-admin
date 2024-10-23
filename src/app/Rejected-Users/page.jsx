@@ -11,7 +11,7 @@ const RejectedUsers = () => {
     const token = localStorage.getItem("token");
     getUsers("REJECTED", token);
     console.log(data);
-  });
+  },[]);
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
