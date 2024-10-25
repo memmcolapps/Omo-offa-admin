@@ -6,7 +6,7 @@ import UserProfileForm from "../../components/common/userinfo";
 import Navbar from "@/app/components/common/navbar";
 import { useSearchParams } from "next/navigation";
 
-const UserProfile = () => {
+const UserApprovedProfile = () => {
   const searchParams = useSearchParams();
   const [user, setUser] = useState(null);
 
@@ -20,11 +20,11 @@ const UserProfile = () => {
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
       <div className="flex-grow overflow-auto">
-        <Navbar pageName={"Pending Users > User Profile"} />
-        <UserProfileForm user={user} showApproveReject={null} />
+        <Navbar pageName={"Approved Users > User Profile"} />
+        <UserProfileForm user={user} showApproveReject={""} />
       </div>
     </div>
   );
 };
 
-export default UserProfile;
+export default UserApprovedProfile;

@@ -93,7 +93,7 @@ export function DashboardChart({ data }) {
               data={chartData}
               layout="vertical"
               margin={{
-                left: 30,
+                left: 60,
               }}
             >
               <YAxis
@@ -103,12 +103,12 @@ export function DashboardChart({ data }) {
                 tickMargin={10}
                 axisLine={false}
                 tickFormatter={(value) => chartConfig[value]?.label}
-                className="text-[1rem]"
+                className="text-[1.5rem] "
               />
               <XAxis
                 dataKey="totalNumbers"
                 type="number"
-                className="text-[1rem]"
+                className="text-[1.5rem]"
               />
               <ChartTooltip
                 cursor={false}

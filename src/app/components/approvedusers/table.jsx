@@ -3,8 +3,10 @@ import React, { useState } from "react";
 import Image from "next/image";
 import MaxContainer from "../common/maxcontainer";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const ApprovedUserTable = ({ data }) => {
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState("");
 
@@ -29,6 +31,11 @@ const ApprovedUserTable = ({ data }) => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }
+  };
+
+  const handleRowClick = (user) => {
+    const userEncoded = encodeURIComponent(JSON.stringify(user)); // Convert user object to a string
+    router.push(`/Approved-Users/user?user=${userEncoded}`);
   };
 
   return data.length > 0 ? (
@@ -63,7 +70,11 @@ const ApprovedUserTable = ({ data }) => {
           </thead>
           <tbody className="text-[1.2rem]">
             {currentUsers.map((user, index) => (
-              <tr key={index} className="border-t hover:bg-gray-50">
+              <tr
+                key={index}
+                className="border-t hover:bg-gray-50 cursor-pointer"
+                onClick={() => handleRowClick(user)}
+              >
                 <td className="py-4 px-6 flex items-center">
                   <Image
                     src="/home/offa_logo.svg"
