@@ -1,8 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Navbar from "../components/common/navbar";
-import Sidebar from "../components/common/sidebar";
 import { DashboardChart } from "../components/dashboard/chart";
 import useGetDashboard from "@/app/hooks/useGetDashboard";
 
@@ -32,12 +30,8 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <div className="flex-grow overflow-auto">
-        <Navbar pageName={"Dashboard"} loggedInUser={userData} />
-        <DashboardChart data={data} />
-      </div>
+    <div className="p-8 pt-16">
+      <DashboardChart data={data} />;
     </div>
   );
 };

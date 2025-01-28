@@ -1,9 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import Sidebar from "../../components/common/sidebar";
 import UserProfileForm from "../../components/common/userinfo";
-import Navbar from "@/app/components/common/navbar";
 import { useSearchParams } from "next/navigation";
 
 const UserProfile = () => {
@@ -16,15 +14,7 @@ const UserProfile = () => {
       setUser(JSON.parse(decodeURIComponent(userParam)));
     }
   }, [searchParams]);
-  return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <div className="flex-grow overflow-auto">
-        <Navbar pageName={"Pending Users > User Profile"} />
-        <UserProfileForm user={user} showApproveReject={null} />
-      </div>
-    </div>
-  );
+  return <UserProfileForm user={user} showApproveReject={null} />;
 };
 
 export default UserProfile;

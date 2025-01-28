@@ -3,22 +3,21 @@ import useFetchAPI from "./useFetch";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
-const useGetUsers = () => {
+const useGetLogs = () => {
   const fetchAPI = useFetchAPI();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
   /**
    *
-   * @param {*} status
    * @param {*} token
    */
 
-  const getUsers = async (status, token, page, limit) => {
+  const getLogs = async (token, page, limit) => {
     try {
       setLoading(true);
       const response = await fetchAPI(
-        `api/v1/user/all-users-flag?status=${status}&page=${page}&limit=${limit}`,
+        `api/v1/admin/logs?page=${page}&limit=${limit}`,
         {
           method: "GET",
           headers: {
@@ -41,7 +40,7 @@ const useGetUsers = () => {
     }
   };
 
-  return { getUsers, data, loading };
+  return { getLogs, data, loading };
 };
 
-export default useGetUsers;
+export default useGetLogs;

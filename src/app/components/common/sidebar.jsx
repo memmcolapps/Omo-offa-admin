@@ -1,6 +1,9 @@
+"use client";
+
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Hourglass,
@@ -9,6 +12,15 @@ import {
   Clipboard,
 } from "lucide-react";
 
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+} from "@/app/components/ui/sidebar";
+
 const menuItems = [
   {
     name: "Dashboard",
@@ -16,17 +28,18 @@ const menuItems = [
     icon: <LayoutDashboard size={15} />,
   },
   {
-    name: "Pending User’s",
-    href: "/Pending-Users",
-    icon: <Hourglass size={15} />,
-  },
-  {
-    name: "Approved User’s",
+    name: "Approved User's",
     href: "/Approved-Users",
     icon: <UserCheck size={15} />,
   },
   {
-    name: "Rejected User’s",
+    name: "Pending User's",
+    href: "/Pending-Users",
+    icon: <Hourglass size={15} />,
+  },
+
+  {
+    name: "Rejected User's",
     href: "/Rejected-Users",
     icon: <UserX size={15} />,
   },
@@ -35,37 +48,48 @@ const menuItems = [
     href: "/Generate-Report",
     icon: <Clipboard size={15} />,
   },
+  {
+    name: "Admin Actions Log",
+    href: "/Action-Logs",
+    icon: <Clipboard size={15} />,
+  },
 ];
 
-const Sidebar = () => {
+export function CustomSidebar() {
+  const pathname = usePathname();
+
   return (
-    <aside className="w-1/5 h-screen bg-[#002E20] text-[#C8FFC4]">
-      <nav className="mt-5">
-        <Link href={"/"}>
+    <Sidebar className="h-screen bg-[#002E20] text-[#C8FFC4]">
+      <SidebarHeader className="h-[12rem] flex items-center justify-center">
+        <Link href="/">
           <Image
             width={100}
             height={43}
             alt="logo"
-            className="my-[4rem] mx-auto"
-            src={"/common/offanimi.svg"}
+            src="/common/offanimi.svg"
+            className="mx-auto"
           />
         </Link>
-        <ul className="mt-[5rem]">
+      </SidebarHeader>
+      <SidebarContent className="px-4 ">
+        <SidebarMenu>
           {menuItems.map((item) => (
-            <li key={item.name} className="my-[2.5rem] mx-auto w-3/4">
-              <Link
-                href={item.href}
-                className="flex items-center px-4 py-2 hover:bg-[#007250] rounded-lg transition-colors duration-200"
+            <SidebarMenuItem key={item.name} className="my-[.5rem]">
+              <SidebarMenuButton
+                asChild
+                className={`w-full hover:bg-[#007250] rounded-lg transition-colors duration-200 ${
+                  pathname === item.href ? "bg-[#007250]" : ""
+                }`}
               >
-                {item.icon}
-                <span className="p_ii ml-[1.5rem] ">{item.name}</span>
-              </Link>
-            </li>
+                <Link href={item.href} className="flex items-center px-4 py-10">
+                  {item.icon}
+                  <span className="ml-[1.5rem] text-2xl">{item.name}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           ))}
-        </ul>
-      </nav>
-    </aside>
+        </SidebarMenu>
+      </SidebarContent>
+    </Sidebar>
   );
-};
-
-export default Sidebar;
+}

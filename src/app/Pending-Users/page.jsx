@@ -13,15 +13,7 @@ const PendingUsers = () => {
     getUsers("PENDING", token);
     console.log(data);
   }, []);
-  return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <div className="flex-grow overflow-auto">
-        <Navbar pageName={"Pending Users"} />
-        <PendingUserTable data={data.users ?? []} status={"PENDING"} />
-      </div>
-    </div>
-  );
+  return <PendingUserTable data={data.users ?? []} status={"PENDING"} />;
 };
 
 export default PendingUsers;

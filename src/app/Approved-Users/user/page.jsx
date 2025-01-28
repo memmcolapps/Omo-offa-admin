@@ -16,15 +16,7 @@ const UserApprovedProfile = () => {
       setUser(JSON.parse(decodeURIComponent(userParam)));
     }
   }, [searchParams]);
-  return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <div className="flex-grow overflow-auto">
-        <Navbar pageName={"Approved Users > User Profile"} />
-        <UserProfileForm user={user} showApproveReject={""} />
-      </div>
-    </div>
-  );
+  return <UserProfileForm user={user} showApproveReject={""} />;
 };
 
 export default UserApprovedProfile;
