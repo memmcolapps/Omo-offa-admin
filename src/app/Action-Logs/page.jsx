@@ -23,7 +23,7 @@ export default function AdminActionsLog() {
     } else {
       getLogs(token, currentPage, limit);
     }
-  }, [currentPage]); // Removed unnecessary 'filter' dependency
+  }, [currentPage]);
 
   useEffect(() => {
     if (data) {
