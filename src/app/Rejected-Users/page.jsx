@@ -5,7 +5,6 @@ import useGetUsers from "@/app/hooks/useGetUsers";
 import { Input } from "@/app/components/ui/input";
 import { Search } from "lucide-react";
 import { ReusableTable } from "../components/common/table";
-import RejectedUserTable from "../components/rejectedusers/table";
 const RejectedUsers = () => {
   const { getUsers, data, loading } = useGetUsers();
   const [currentPage, setCurrentPage] = useState(1);
