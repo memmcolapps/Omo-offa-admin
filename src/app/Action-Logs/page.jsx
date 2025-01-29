@@ -1,20 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
-import MaxContainer from "@/app/components/common/maxcontainer";
+import { Search } from "lucide-react";
 import { Input } from "@/app/components/ui/input";
-import { Button } from "@/app/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/app/components/ui/table";
 import useGetLogs from "../hooks/useGetLogs";
 import { useRouter } from "next/navigation";
+import { ReusableTable } from "../components/common/table";
 
 export default function AdminActionsLog() {
   const [actions, setActions] = useState([]);
@@ -41,6 +32,10 @@ export default function AdminActionsLog() {
     }
   }, [data]);
 
+  const handleRowClick = (item) => {
+    console.log(item);
+  };
+
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
@@ -53,112 +48,36 @@ export default function AdminActionsLog() {
     }
   };
 
+  const columns = [
+    { key: "action", header: "Action" },
+    { key: "email", header: "Admin" },
+    { key: "createdAt", header: "Timestamp" },
+  ];
+
   return (
-    <div className="p-8 pt-16">
-      <div className="w-1/4 py-[3rem] mx-[3rem] text-[1.5rem]">
-        <div className="relative">
+    <div className="p-10 pt-10">
+      <div className="w-1/4 py-[3rem] text-[2rem]">
+        <div className="relative text-xl">
           <Search className="w-6 h-6 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
           <Input
             type="text"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Search by action"
-            className="pl-12 pr-4 py-2 w-full rounded-lg text-lg" // Increased text size
+            className="pl-12 pr-4 py-5 w-full text-lg rounded-full border-2 border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all duration-300 ease-in-out placeholder-gray-400 font-medium"
           />
         </div>
       </div>
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden flex-1">
-        {" "}
-        {/* Allow this div to grow */}
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className=" bg-white z-10 shadow-sm">
-              <TableRow>
-                <TableHead className="py-6 px-8 text-2xl font-bold">
-                  {" "}
-                  {/* Increased font size */}
-                  Action
-                </TableHead>
-                <TableHead className="py-6 px-8 text-2xl font-bold">
-                  {" "}
-                  {/* Increased font size */}
-                  Admin
-                </TableHead>
-                <TableHead className="py-6 px-8 text-2xl font-bold">
-                  {" "}
-                  {/* Increased font size */}
-                  Timestamp
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={3}
-                    className="py-5 px-8 text-center text-lg"
-                  >
-                    {" "}
-                    {/* Increased font size */}
-                    Loading...
-                  </TableCell>
-                </TableRow>
-              ) : actions?.length > 0 ? (
-                actions.map((action) => (
-                  <TableRow key={action.id} className="hover:bg-gray-50">
-                    <TableCell className="py-5 px-8 text-xl">
-                      {action?.action}
-                    </TableCell>
-                    <TableCell className="py-5 px-8 text-xl">
-                      {action?.email}
-                    </TableCell>
-                    <TableCell className="py-5 px-8 text-xl">
-                      {action?.createdAt}
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={3}
-                    className="py-5 px-8 text-center text-lg"
-                  >
-                    {" "}
-                    {/* Increased font size */}
-                    No actions found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        <div className="bg-white py-4 px-8 border-t flex flex-col md:flex-row justify-between items-center gap-4">
-          <span className="text-lg text-gray-600">
-            Page {currentPage} of {totalPages}
-          </span>
-          <div className="flex items-center">
-            <Button
-              onClick={handlePrevPage}
-              disabled={currentPage === 1 || loading}
-              variant="outline"
-              size="icon"
-              className="rounded-r-none"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="px-4 py-2 border-t border-b">{currentPage}</span>
-            <Button
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages || loading}
-              variant="outline"
-              size="icon"
-              className="rounded-l-none"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+      <ReusableTable
+        columns={columns}
+        data={actions}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={data?.pagination?.totalLogs}
+        handlePrevPage={handlePrevPage}
+        handleNextPage={handleNextPage}
+        handleRowClick={handleRowClick}
+      />
     </div>
   );
 }

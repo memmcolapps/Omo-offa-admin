@@ -1,17 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
-import Image from "next/image";
 import useGetUsers from "@/app/hooks/useGetUsers";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/app/components/ui/table"; // Assuming you have a UI table component
+import { Input } from "@/app/components/ui/input";
+import { Search } from "lucide-react";
+import { ReusableTable } from "../components/common/table";
 
 const ApprovedUsers = () => {
   const { getUsers, data, loading } = useGetUsers();
@@ -61,138 +54,46 @@ const ApprovedUsers = () => {
     router.push(`/Approved-Users/user?user=${userEncoded}`);
   };
 
+  const columns = [
+    { key: "firstName", header: "Name" },
+    { key: "offaNimiId", header: "OffaNimID" },
+    { key: "nin", header: "NIN" },
+    { key: "stateOfResidence", header: "State Of Residence" },
+    { key: "wardName", header: "Ward Name" },
+    { key: "compoundName", header: "Compound Name" },
+    { key: "phoneNumber", header: "Phone Number" },
+    { key: "idPayment", header: "ID Payment" },
+    { key: "createdAt", header: "Date Added" },
+  ];
+
   return (
-    <div className="p-8 pt-16">
+    <div className="p-10 pt-10 w-full">
       {loading ? (
         <div className="text-2xl">Loading...</div> // Show loading state
       ) : (
         <>
-          <div className="w-1/4 py-[3rem] mx-[3rem] text-[1.5rem]">
+          <div className="w-1/4 py-[3rem] text-[2rem]">
             <div className="relative">
               <Search className="w-6 h-6 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-              <input
+              <Input
                 type="text"
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
                 placeholder="Search by OffaNimiID"
-                className="pl-12 pr-4 py-2 w-full rounded-lg text-lg border" // Increased text size
+                className="pl-12 pr-4 py-5 w-full text-lg rounded-full border-2 border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all duration-300 ease-in-out placeholder-gray-400 font-medium"
               />
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden flex-1">
-            <Table>
-              <TableHeader className="bg-gray-100 text-xl">
-                <TableRow>
-                  <TableHead className="py-4 px-6 font-bold">Name</TableHead>
-                  <TableHead className="py-4 px-6 font-bold">
-                    OffaNimID
-                  </TableHead>
-                  <TableHead className="py-4 px-6 font-bold">NIN</TableHead>
-                  <TableHead className="py-4 px-6 font-bold">
-                    State Of Residence
-                  </TableHead>
-                  <TableHead className="py-4 px-6 font-bold">
-                    Ward Name
-                  </TableHead>
-                  <TableHead className="py-4 px-6 font-bold">
-                    Compound Name
-                  </TableHead>
-                  <TableHead className="py-4 px-6 font-bold">
-                    Phone Number
-                  </TableHead>
-                  <TableHead className="py-4 px-6 font-bold">
-                    ID Payment
-                  </TableHead>
-                  <TableHead className="py-4 px-6 font-bold">
-                    Date Added
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers?.length > 0 ? (
-                  filteredUsers.map((user, index) => (
-                    <TableRow
-                      key={index}
-                      className="hover:bg-gray-50 cursor-pointer text-xl"
-                      onClick={() => handleRowClick(user)}
-                    >
-                      <TableCell className="py-4 px-6 flex items-center">
-                        <Image
-                          src="/home/offa_logo.svg"
-                          alt="User"
-                          className="w-8 h-8 rounded-full mr-2"
-                          height={20}
-                          width={20}
-                        />
-                        {user.firstName} {user.middleName} {user.lastName}
-                      </TableCell>
-                      <TableCell className="py-4 px-6">
-                        {user.offaNimiId}
-                      </TableCell>
-                      <TableCell className="py-4 px-6">{user.nin}</TableCell>
-                      <TableCell className="py-4 px-6">
-                        {user.stateOfResidence}
-                      </TableCell>
-                      <TableCell className="py-4 px-6">
-                        {user.wardName}
-                      </TableCell>
-                      <TableCell className="py-4 px-6">
-                        {user.compoundName}
-                      </TableCell>
-                      <TableCell className="py-4 px-6">
-                        {user.phoneNumber}
-                      </TableCell>
-                      <TableCell className="py-4 px-6">
-                        {user.idPayment.toString()}
-                      </TableCell>
-                      <TableCell className="py-4 px-6">
-                        {new Date(user.createdAt).toLocaleDateString()}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={9}
-                      className="py-5 px-6 text-center text-lg"
-                    >
-                      No users found.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-            <div className="bg-white py-4 px-6 border-t flex justify-between items-center">
-              <span className="text-sm text-gray-600">
-                Showing {filteredUsers?.length} of {data.pagination?.totalUsers}{" "}
-                users
-              </span>
-              <div className="flex items-center">
-                <button
-                  onClick={handlePrevPage}
-                  className={`px-2 py-1 border rounded-l-md hover:bg-gray-100 ${
-                    currentPage === 1 && "cursor-not-allowed opacity-50"
-                  }`}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                <span className="px-4 py-2 border-t border-b">
-                  {currentPage}
-                </span>
-                <button
-                  onClick={handleNextPage}
-                  className={`px-2 py-1 border rounded-r-md hover:bg-gray-100 ${
-                    currentPage === totalPages &&
-                    "cursor-not-allowed opacity-50"
-                  }`}
-                  disabled={currentPage === totalPages}
-                >
-                  <ChevronRight size={20} />
-                </button>
-              </div>
-            </div>
-          </div>
+          <ReusableTable
+            columns={columns}
+            data={filteredUsers}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={data.pagination?.totalUsers}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+            handleRowClick={handleRowClick}
+          />
         </>
       )}
     </div>
