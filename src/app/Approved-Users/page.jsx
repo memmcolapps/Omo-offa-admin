@@ -11,7 +11,7 @@ const ApprovedUsers = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [users, setUsers] = useState([]);
-  const limit = 10;
+  const limit = 50;
   const router = useRouter();
   const [filter, setFilter] = useState("");
 

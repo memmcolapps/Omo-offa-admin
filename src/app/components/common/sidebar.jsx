@@ -4,12 +4,15 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import useGetLoggedInAdmin from "@/app/hooks/useAdminLoggedIn";
 import {
   LayoutDashboard,
   Hourglass,
   UserCheck,
   UserX,
   Clipboard,
+  Logs,
 } from "lucide-react";
 
 import {
@@ -26,37 +29,63 @@ const menuItems = [
     name: "Dashboard",
     href: "/Dashboard",
     icon: <LayoutDashboard size={15} />,
+    userType: ["superadmin", "operator"],
   },
   {
     name: "Approved User's",
     href: "/Approved-Users",
     icon: <UserCheck size={15} />,
+    userType: ["superadmin", "operator"],
   },
   {
     name: "Pending User's",
     href: "/Pending-Users",
     icon: <Hourglass size={15} />,
+    userType: ["superadmin", "operator"],
   },
 
   {
     name: "Rejected User's",
     href: "/Rejected-Users",
     icon: <UserX size={15} />,
+    userType: ["superadmin", "operator"],
   },
   {
     name: "Generate Report",
     href: "/Generate-Report",
     icon: <Clipboard size={15} />,
+    userType: ["superadmin"],
+    permission: {
+      reports: {
+        generate: true,
+        view: true,
+      },
+    },
   },
   {
     name: "Admin Actions Log",
     href: "/Action-Logs",
-    icon: <Clipboard size={15} />,
+    icon: <Logs size={15} />,
+    userType: ["superadmin"],
   },
 ];
 
 export function CustomSidebar() {
   const pathname = usePathname();
+  const { getLoggedInAdmin, data, loading } = useGetLoggedInAdmin();
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      getLoggedInAdmin(token);
+    }
+  }, []);
+
+  const hasPermission = (item) => {
+    return (
+      item.userType.includes(data.admin?.adminType) ||
+      item.permission?.reports?.view
+    );
+  };
 
   return (
     <Sidebar className="h-screen bg-[#002E20] text-[#C8FFC4]">
@@ -73,7 +102,7 @@ export function CustomSidebar() {
       </SidebarHeader>
       <SidebarContent className="px-4 ">
         <SidebarMenu>
-          {menuItems.map((item) => (
+          {menuItems.filter(hasPermission).map((item) => (
             <SidebarMenuItem key={item.name} className="my-[.5rem]">
               <SidebarMenuButton
                 asChild

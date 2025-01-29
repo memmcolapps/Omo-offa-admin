@@ -103,12 +103,12 @@ export function DashboardChart({ data }) {
                 tickMargin={10}
                 axisLine={false}
                 tickFormatter={(value) => chartConfig[value]?.label}
-                className="text-[1.5rem] "
+                className="text-[1.3rem] "
               />
               <XAxis
                 dataKey="totalNumbers"
                 type="number"
-                className="text-[1.5rem]"
+                className="text-[1.3rem]"
               />
               <ChartTooltip
                 cursor={false}

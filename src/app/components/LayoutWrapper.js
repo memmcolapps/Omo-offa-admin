@@ -9,10 +9,6 @@ export default function LayoutWrapper({ children }) {
   const pathname = usePathname();
   const isLoginPage = pathname === "/";
 
-  const loggedInUser = {
-    email: "moshood988@gmail.com",
-  };
-
   if (isLoginPage) {
     return <>{children}</>;
   }
@@ -22,7 +18,7 @@ export default function LayoutWrapper({ children }) {
       <div className="flex h-screen overflow-hidden w-full">
         <CustomSidebar />
         <div className="flex-1 flex flex-col">
-          <Navbar loggedInUser={loggedInUser} />
+          <Navbar />
           <main className="flex-1 overflow-auto pt-4">{children}</main>
         </div>
       </div>
