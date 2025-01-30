@@ -69,7 +69,7 @@ const Login = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[1.2rem] text-[#DDFFDA]">
+                    <FormLabel className="text-[1.5rem] text-black">
                       Email
                     </FormLabel>
                     <FormControl>
@@ -78,7 +78,7 @@ const Login = () => {
                         required
                         type="text"
                         placeholder="Enter Email"
-                        className="border font-[600] placeholder:text-[#B6B9B8] text-black bg-white placeholder:font-[400] h-[3.7rem] text-[1.3rem]"
+                        className="border font-[600] placeholder:text-[#B6B9B8] text-black bg-white placeholder:font-[400] h-[3.7rem] placholder:text-[1.3rem]"
                       />
                     </FormControl>
                   </FormItem>
@@ -90,7 +90,7 @@ const Login = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem className="mt-[1.5rem] relative">
-                    <FormLabel className="text-[1.2rem] text-[#DDFFDA]">
+                    <FormLabel className="text-[1.2rem] text-black">
                       Password
                     </FormLabel>
                     <FormControl>
@@ -99,7 +99,7 @@ const Login = () => {
                           {...field}
                           type={isPasswordVisible ? "text" : "password"}
                           placeholder="Enter Password"
-                          className="border font-[600] placeholder:text-[#B6B9B8] text-black bg-white placeholder:font-[400] h-[3.7rem] text-[1.3rem] pr-[3rem]"
+                          className="border font-[600] placeholder:text-[#B6B9B8] text-black bg-white placeholder:font-[400] h-[3.7rem] text-[1.3rem] pr-[3rem] placholder:text-[1.3rem]"
                         />
                         <span
                           className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
@@ -121,7 +121,7 @@ const Login = () => {
                 type="submit"
                 required
                 disabled={loading || !form.formState.isValid}
-                className="w-full mt-[2.8rem] py-[2rem] rounded-[.5rem] bg-[#002B1E] font-[800] text-[#C8FFC4]"
+                className="w-full mt-[2.8rem] py-[2rem] rounded-[.5rem] bg-[#002B1E] font-[800] text-[#C8FFC4] text-[1.5rem]"
               >
                 Log In
                 {loading && (

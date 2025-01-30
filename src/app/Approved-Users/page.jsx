@@ -19,6 +19,8 @@ const ApprovedUsers = () => {
     const token = localStorage.getItem("token");
     if (token) {
       getUsers("APPROVED", token, currentPage, limit);
+    } else {
+      router.push("/");
     }
   }, [currentPage]);
 

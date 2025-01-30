@@ -14,7 +14,7 @@ const UserProfile = () => {
       setUser(JSON.parse(decodeURIComponent(userParam)));
     }
   }, [searchParams]);
-  return <UserProfileForm user={user} showApproveReject={null} />;
+  return <UserProfileForm user={user} showApproveReject={true} />;
 };
 
 export default UserProfile;

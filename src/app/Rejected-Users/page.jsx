@@ -10,14 +10,17 @@ const RejectedUsers = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [users, setUsers] = useState([]);
-  const limit = 10;
+  const limit = 50;
   const router = useRouter();
   const [filter, setFilter] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    getUsers("REJECTED", token, currentPage, limit);
-    console.log(data);
+    if (token) {
+      getUsers("REJECTED", token, currentPage, limit);
+    } else {
+      router.push("/");
+    }
   }, [currentPage]);
   useEffect(() => {
     if (data) {

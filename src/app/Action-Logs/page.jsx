@@ -12,7 +12,7 @@ export default function AdminActionsLog() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter] = useState("");
-  const limit = 10;
+  const limit = 50;
   const { getLogs, data, loading } = useGetLogs();
   const router = useRouter();
 

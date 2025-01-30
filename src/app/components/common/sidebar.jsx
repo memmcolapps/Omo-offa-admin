@@ -4,8 +4,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import useGetLoggedInAdmin from "@/app/hooks/useAdminLoggedIn";
+import { useUser } from "@/app/context/UserContext";
 import {
   LayoutDashboard,
   Hourglass,
@@ -67,25 +66,30 @@ const menuItems = [
     href: "/Action-Logs",
     icon: <Logs size={15} />,
     userType: ["superadmin"],
+    permission: {
+      audit: {
+        view: true,
+      },
+    },
   },
 ];
 
 export function CustomSidebar() {
   const pathname = usePathname();
-  const { getLoggedInAdmin, data, loading } = useGetLoggedInAdmin();
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      getLoggedInAdmin(token);
-    }
-  }, []);
+  const { user, loading } = useUser();
 
   const hasPermission = (item) => {
+    if (!user) return false;
     return (
-      item.userType.includes(data.admin?.adminType) ||
-      item.permission?.reports?.view
+      item.userType.includes(user.adminType) ||
+      item.permission?.reports?.view ||
+      item.permission?.audit?.view
     );
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <Sidebar className="h-screen bg-[#002E20] text-[#C8FFC4]">

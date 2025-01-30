@@ -13,12 +13,15 @@ const PendingUsers = () => {
   const [filter, setFilter] = useState("");
   const [totalPages, setTotalPages] = useState(1);
   const [users, setUsers] = useState([]);
-  const limit = 10;
+  const limit = 50;
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    getUsers("PENDING", token, currentPage, limit);
-    console.log(data);
+    if (token) {
+      getUsers("PENDING", token, currentPage, limit);
+    } else {
+      router.push("/");
+    }
   }, [currentPage]);
 
   useEffect(() => {
