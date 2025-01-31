@@ -25,7 +25,6 @@ const useGetDashboard = () => {
       });
 
       const responseData = await response.json();
-      console.log(responseData);
 
       setData(responseData);
     } catch (error) {

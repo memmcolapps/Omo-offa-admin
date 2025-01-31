@@ -60,16 +60,13 @@ const UserProfileForm = ({ user, showApproveReject }) => {
 
   useEffect(() => {
     if (admin) {
-      console.log("Admin", admin);
       const isSuperAdmin = admin?.adminType === "superadmin";
-      console.log("Is super admin", isSuperAdmin);
+
       const canEditUser =
         isSuperAdmin || admin?.permissions?.user?.edit === true;
       const canApprove =
         isSuperAdmin || admin?.permissions?.user?.approve === true;
 
-      console.log("Can edit user", canEditUser);
-      console.log("Can approve user", canApprove);
       setEditUser(canEditUser);
       setCanApprove(canApprove);
     }
@@ -85,7 +82,6 @@ const UserProfileForm = ({ user, showApproveReject }) => {
   };
 
   const handleSaveChanges = () => {
-    console.log("Saving user data:", formData);
     editData(formData, user.offaNimiId, localStorage.getItem("token"));
     setIsEditing(false);
     router.back();

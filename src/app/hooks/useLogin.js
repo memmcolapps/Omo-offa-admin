@@ -20,7 +20,6 @@ const useLogin = () => {
       });
 
       const responseData = await response.json();
-      console.log(responseData);
 
       setData(responseData);
     } catch (error) {

@@ -12,6 +12,7 @@ import {
   UserX,
   Clipboard,
   Logs,
+  FolderKanban,
 } from "lucide-react";
 
 import {
@@ -60,6 +61,12 @@ const menuItems = [
         view: true,
       },
     },
+  },
+  {
+    name: "Admin Management",
+    href: "/Admin-Management",
+    icon: <FolderKanban size={15} />,
+    userType: ["superadmin"],
   },
   {
     name: "Admin Actions Log",

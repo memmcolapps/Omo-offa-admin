@@ -43,7 +43,6 @@ const Login = () => {
   const onSubmit = (values) => {
     const { email, password } = values;
     login(email, password);
-    console.log(data);
   };
 
   useEffect(() => {
