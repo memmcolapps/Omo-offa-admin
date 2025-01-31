@@ -69,7 +69,7 @@ const menuItems = [
     userType: ["superadmin"],
   },
   {
-    name: "Admin Actions Log",
+    name: "Audit Log",
     href: "/Action-Logs",
     icon: <Logs size={15} />,
     userType: ["superadmin"],

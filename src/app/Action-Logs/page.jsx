@@ -55,7 +55,7 @@ export default function AdminActionsLog() {
   ];
 
   return (
-    <div className="p-10 pt-10">
+    <div className="p-10">
       <div className="w-1/4 py-[3rem] text-[2rem]">
         <div className="relative text-xl">
           <Search className="w-6 h-6 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />

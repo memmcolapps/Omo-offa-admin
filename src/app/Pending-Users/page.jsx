@@ -64,7 +64,7 @@ const PendingUsers = () => {
   ];
 
   return (
-    <div className="p-10 pt-10 w-full">
+    <div className="p-10 w-full">
       {loading ? (
         <div className="text-2xl">Loading...</div> // Show loading state
       ) : (

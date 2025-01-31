@@ -56,11 +56,11 @@ const Login = () => {
     <>
       <ToastContainer />
       <Navbar />
-      <div className="mx-auto w-fit pt-[15rem]">
-        <p className="font-[800] text-[2rem] text-[#07200B] text-center mb-[1.5rem]">
-          Admin Login
-        </p>
+      <div className="flex items-center justify-center min-h-screen">
         <div className="p-[3.5rem] custom bg-white rounded-[1rem] w-[50rem]">
+          <p className="font-[800] text-[2rem] text-[#07200B] text-center mb-[1.5rem]">
+            Admin Login
+          </p>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
               <FormField
@@ -83,7 +83,6 @@ const Login = () => {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="password"
@@ -115,7 +114,6 @@ const Login = () => {
                   </FormItem>
                 )}
               />
-
               <Button
                 type="submit"
                 required

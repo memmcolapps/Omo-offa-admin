@@ -6,6 +6,7 @@ import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Checkbox } from "@/app/components/ui/checkbox";
 import useGetAdmins from "../hooks/useGetAdmins";
+import useDeleteOperator from "../hooks/useDeleteOperator";
 import {
   Table,
   TableBody,
@@ -24,6 +25,7 @@ import {
 
 export default function AdminManagement() {
   const { getAdmins, data, loading } = useGetAdmins();
+  const { deleteOperator, loading: deleting } = useDeleteOperator();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [permissions, setPermissions] = useState({
@@ -47,7 +49,7 @@ export default function AdminManagement() {
     if (data) {
       setAdminOperators(data.admins);
     }
-  }, [data]);
+  }, [data, deleteOperator]);
 
   const handlePermissionChange = (category, permission) => {
     setPermissions((prev) => ({
@@ -75,11 +77,17 @@ export default function AdminManagement() {
   };
 
   const handleDeleteOperator = (index) => {
-    console.log(adminOperators[index]);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/");
+    } else {
+      console.log(adminOperators[index]);
+      deleteOperator(token, adminOperators[index].id);
+    }
   };
 
   return (
-    <div className="container mx-auto p-10 pt-10 space-y-8">
+    <div className="container mx-auto p-10 space-y-8">
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Add Admin Operator</CardTitle>

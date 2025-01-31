@@ -30,7 +30,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="p-8 pt-16">
+    <div className="p-10">
       <DashboardChart data={data} />;
     </div>
   );
