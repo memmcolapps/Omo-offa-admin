@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import useGetUsers from "@/app/hooks/useGetUsers";
 import { Input } from "@/app/components/ui/input";
@@ -22,8 +22,9 @@ const PendingUsers = () => {
     } else {
       router.push("/");
     }
-  }, [currentPage]);
+  }, [currentPage, getUsers, router, limit]);
 
+  // Update local state when data changes.
   useEffect(() => {
     if (data) {
       setUsers(data.users);
@@ -31,37 +32,49 @@ const PendingUsers = () => {
     }
   }, [data]);
 
-  const filteredData = users?.filter((user) =>
-    user.offaNimiId.toLowerCase().includes(filter.toLowerCase())
+  // Memoize filtered data so that it's recalculated only when users or filter changes.
+  const filteredData = useMemo(() => {
+    return users?.filter((user) =>
+      user.offaNimiId.toLowerCase().includes(filter.toLowerCase())
+    );
+  }, [users, filter]);
+
+  // Memoize pagination handlers.
+  const handleNextPage = useCallback(() => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
+  }, [currentPage, totalPages]);
+
+  const handlePrevPage = useCallback(() => {
+    if (currentPage > 1) {
+      setCurrentPage((prevPage) => prevPage - 1);
+    }
+  }, [currentPage]);
+
+  // Memoize row click handler.
+  const handleRowClick = useCallback(
+    (user) => {
+      const userEncoded = encodeURIComponent(JSON.stringify(user));
+      router.push(`/Pending-Users/user?user=${userEncoded}`);
+    },
+    [router]
   );
 
-  const handleNextPage = () => {
-    if (currentPage < totalNumberOfPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleRowClick = (user) => {
-    const userEncoded = encodeURIComponent(JSON.stringify(user)); // Convert user object to a string
-    router.push(`/Pending-Users/user?user=${userEncoded}`);
-  };
-
-  const columns = [
-    { key: "firstName", header: "Name" },
-    { key: "offaNimiId", header: "OffaNimID" },
-    { key: "email", header: "Email" },
-    { key: "stateOfResidence", header: "State Of Residence" },
-    { key: "wardName", header: "Ward Name" },
-    { key: "compoundName", header: "Compound Name" },
-    { key: "phoneNumber", header: "Phone Number" },
-    { key: "createdAt", header: "Date Added" },
-  ];
+  // Memoize columns so that the definition is stable across renders.
+  const columns = useMemo(
+    () => [
+      { key: "firstName", header: "Name" },
+      { key: "offaNimiId", header: "OffaNimID" },
+      { key: "email", header: "Email" },
+      { key: "stateOfResidence", header: "State Of Residence" },
+      { key: "wardName", header: "Ward Name" },
+      { key: "compoundName", header: "Compound Name" },
+      { key: "phoneNumber", header: "Phone Number" },
+      { key: "createdAt", header: "Date Added" },
+    ],
+    []
+  );
 
   return (
     <div className="p-10 w-full">

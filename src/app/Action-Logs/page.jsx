@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/app/components/ui/input";
 import useGetLogs from "../hooks/useGetLogs";
@@ -16,6 +16,7 @@ export default function AdminActionsLog() {
   const { getLogs, data, loading } = useGetLogs();
   const router = useRouter();
 
+  // Effect to fetch logs when the currentPage changes
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -23,8 +24,9 @@ export default function AdminActionsLog() {
     } else {
       getLogs(token, currentPage, limit);
     }
-  }, [currentPage]);
+  }, [currentPage, getLogs, router]);
 
+  // Effect to update actions and totalPages when new data arrives
   useEffect(() => {
     if (data) {
       setActions(data.data);
@@ -32,27 +34,29 @@ export default function AdminActionsLog() {
     }
   }, [data]);
 
-  const handleRowClick = (item) => {
+  // Memoize the event handler for row clicks
+  const handleRowClick = useCallback((item) => {
     console.log(item);
-  };
+  }, []);
 
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
+  // Memoize pagination handlers
+  const handleNextPage = useCallback(() => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  }, [totalPages]);
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
+  const handlePrevPage = useCallback(() => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  }, []);
 
-  const columns = [
-    { key: "action", header: "Action" },
-    { key: "email", header: "Admin" },
-    { key: "createdAt", header: "Timestamp" },
-  ];
+  // Memoize columns definition to avoid recreating it on every render
+  const columns = useMemo(
+    () => [
+      { key: "action", header: "Action" },
+      { key: "email", header: "Admin" },
+      { key: "createdAt", header: "Timestamp" },
+    ],
+    []
+  );
 
   return (
     <div className="p-10">
@@ -68,16 +72,21 @@ export default function AdminActionsLog() {
           />
         </div>
       </div>
-      <ReusableTable
-        columns={columns}
-        data={actions}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={data?.pagination?.totalLogs}
-        handlePrevPage={handlePrevPage}
-        handleNextPage={handleNextPage}
-        handleRowClick={handleRowClick}
-      />
+
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <ReusableTable
+          columns={columns}
+          data={actions}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={data?.pagination?.totalLogs}
+          handlePrevPage={handlePrevPage}
+          handleNextPage={handleNextPage}
+          handleRowClick={handleRowClick}
+        />
+      )}
     </div>
   );
 }

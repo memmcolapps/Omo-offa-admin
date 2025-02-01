@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import useGetUsers from "@/app/hooks/useGetUsers";
 import { Input } from "@/app/components/ui/input";
@@ -15,6 +16,7 @@ const ApprovedUsers = () => {
   const router = useRouter();
   const [filter, setFilter] = useState("");
 
+  // Fetch approved users when currentPage (or token) changes.
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -22,8 +24,9 @@ const ApprovedUsers = () => {
     } else {
       router.push("/");
     }
-  }, [currentPage]);
+  }, [currentPage, getUsers, router, limit]);
 
+  // Update users and totalPages whenever new data arrives.
   useEffect(() => {
     if (data) {
       setUsers(data.users);
@@ -31,47 +34,59 @@ const ApprovedUsers = () => {
     }
   }, [data]);
 
-  const filteredUsers = users?.filter((user) =>
-    user.offaNimiId.toLowerCase().includes(filter.toLowerCase())
-  );
+  // Memoize the filtered list of users based on the search filter.
+  const filteredUsers = useMemo(() => {
+    return users?.filter((user) =>
+      user.offaNimiId.toLowerCase().includes(filter.toLowerCase())
+    );
+  }, [users, filter]);
 
-  const handlePageChange = (page) => {
+  // Handlers for pagination using useCallback.
+  const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
-  };
+  }, []);
 
-  const handleNextPage = () => {
+  const handleNextPage = useCallback(() => {
     if (currentPage < totalPages) {
       handlePageChange(currentPage + 1);
     }
-  };
+  }, [currentPage, totalPages, handlePageChange]);
 
-  const handlePrevPage = () => {
+  const handlePrevPage = useCallback(() => {
     if (currentPage > 1) {
       handlePageChange(currentPage - 1);
     }
-  };
+  }, [currentPage, handlePageChange]);
 
-  const handleRowClick = (user) => {
-    const userEncoded = encodeURIComponent(JSON.stringify(user));
-    router.push(`/Approved-Users/user?user=${userEncoded}`);
-  };
+  // Memoize row click handler.
+  const handleRowClick = useCallback(
+    (user) => {
+      const userEncoded = encodeURIComponent(JSON.stringify(user));
+      router.push(`/Approved-Users/user?user=${userEncoded}`);
+    },
+    [router]
+  );
 
-  const columns = [
-    { key: "firstName", header: "Name" },
-    { key: "offaNimiId", header: "OffaNimID" },
-    { key: "nin", header: "NIN" },
-    { key: "stateOfResidence", header: "State Of Residence" },
-    { key: "wardName", header: "Ward Name" },
-    { key: "compoundName", header: "Compound Name" },
-    { key: "phoneNumber", header: "Phone Number" },
-    { key: "idPayment", header: "ID Payment" },
-    { key: "createdAt", header: "Date Added" },
-  ];
+  // Memoize columns definition.
+  const columns = useMemo(
+    () => [
+      { key: "firstName", header: "Name" },
+      { key: "offaNimiId", header: "OffaNimID" },
+      { key: "nin", header: "NIN" },
+      { key: "stateOfResidence", header: "State Of Residence" },
+      { key: "wardName", header: "Ward Name" },
+      { key: "compoundName", header: "Compound Name" },
+      { key: "phoneNumber", header: "Phone Number" },
+      { key: "idPayment", header: "ID Payment" },
+      { key: "createdAt", header: "Date Added" },
+    ],
+    []
+  );
 
   return (
     <div className="p-10 w-full">
       {loading ? (
-        <div className="text-2xl">Loading...</div> // Show loading state
+        <div className="text-2xl">Loading...</div> // Loading state
       ) : (
         <>
           <div className="w-1/4 py-[3rem] text-[2rem]">

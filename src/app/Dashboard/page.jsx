@@ -1,13 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { DashboardChart } from "../components/dashboard/chart";
 import useGetDashboard from "@/app/hooks/useGetDashboard";
 
 const Dashboard = () => {
   const { getDashboard, data, loading } = useGetDashboard();
-  const [isLoading, setIsLoading] = useState(true);
-  const [userData, setUserData] = useState();
+
   const router = useRouter();
 
   useEffect(() => {
@@ -15,18 +14,12 @@ const Dashboard = () => {
     if (!token) {
       router.push("/");
     } else {
-      setIsLoading(false);
       getDashboard(token);
-      const userDetails = {
-        id: "4ce99f5a-65a1-4e7a-be90-675b4f0fcbc5",
-        email: "moshood988@gmail.com",
-      };
-      setUserData(userDetails);
     }
   }, [router]);
 
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (loading) {
+    return <div className="text-2xl p-10">Loading...</div>;
   }
 
   return (

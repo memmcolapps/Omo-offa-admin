@@ -1,6 +1,6 @@
 "use client";
 import useFetchAPI from "./useFetch";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "react-toastify";
 
 const useGetUsers = () => {
@@ -14,7 +14,7 @@ const useGetUsers = () => {
    * @param {*} token
    */
 
-  const getUsers = async (status, token, page, limit) => {
+  const getUsers = useCallback(async (status, token, page, limit) => {
     try {
       setLoading(true);
       const response = await fetchAPI(
@@ -38,7 +38,7 @@ const useGetUsers = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return { getUsers, data, loading };
 };

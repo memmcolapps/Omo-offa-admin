@@ -1,6 +1,6 @@
 "use client";
+import { useState, useCallback } from "react";
 import useFetchAPI from "./useFetch";
-import { useState } from "react";
 import { toast } from "react-toastify";
 
 const useGetAdmins = () => {
@@ -9,11 +9,9 @@ const useGetAdmins = () => {
   const [loading, setLoading] = useState(false);
 
   /**
-   *
-   * @param {*} token
+   * Fetch admins using the provided token.
    */
-
-  const getAdmins = async (token) => {
+  const getAdmins = useCallback(async (token) => {
     try {
       setLoading(true);
       const response = await fetchAPI(`api/v1/admin/get-operators`, {
@@ -25,7 +23,6 @@ const useGetAdmins = () => {
       });
 
       const responseData = await response.json();
-
       setData(responseData);
     } catch (error) {
       const networkError = error.message || "Network error";
@@ -34,7 +31,7 @@ const useGetAdmins = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // Now fetchAPI is stable, so getAdmins remains stable as well
 
   return { getAdmins, data, loading };
 };

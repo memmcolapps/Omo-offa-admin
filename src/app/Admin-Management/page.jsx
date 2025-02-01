@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
@@ -22,8 +22,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/app/components/ui/card";
+import { useRouter } from "next/navigation";
 
 export default function AdminManagement() {
+  const router = useRouter();
   const { getAdmins, data, loading } = useGetAdmins();
   const { deleteOperator, loading: deleting } = useDeleteOperator();
   const [email, setEmail] = useState("");
@@ -43,15 +45,15 @@ export default function AdminManagement() {
     } else {
       getAdmins(token);
     }
-  }, []);
+  }, [getAdmins, router]);
 
   useEffect(() => {
     if (data) {
       setAdminOperators(data.admins);
     }
-  }, [data, deleteOperator]);
+  }, [data]);
 
-  const handlePermissionChange = (category, permission) => {
+  const handlePermissionChange = useCallback((category, permission) => {
     setPermissions((prev) => ({
       ...prev,
       [category]: {
@@ -59,12 +61,13 @@ export default function AdminManagement() {
         [permission]: !prev[category][permission],
       },
     }));
-  };
+  }, []);
 
-  const handleAddOperator = () => {
+  // Memoize the add operator function.
+  const handleAddOperator = useCallback(() => {
     if (email && password) {
       const newOperator = { email, password, permissions };
-      setAdminOperators([...adminOperators, newOperator]);
+      setAdminOperators((prevOperators) => [...prevOperators, newOperator]);
       setEmail("");
       setPassword("");
       setPermissions({
@@ -74,20 +77,28 @@ export default function AdminManagement() {
         reports: { generate: false, view: false },
       });
     }
-  };
+  }, [email, password, permissions]);
 
-  const handleDeleteOperator = (index) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/");
-    } else {
-      console.log(adminOperators[index]);
-      deleteOperator(token, adminOperators[index].id);
-    }
-  };
+  // Memoize the delete operator function.
+  const handleDeleteOperator = useCallback(
+    (index) => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/");
+      } else {
+        const operatorToDelete = adminOperators[index];
+        // Only attempt deletion if an id is present
+        if (operatorToDelete?.id) {
+          deleteOperator(token, operatorToDelete.id);
+        }
+      }
+    },
+    [adminOperators, deleteOperator, router]
+  );
 
   return (
     <div className="container mx-auto p-10 space-y-8">
+      {/* Card for Adding Admin Operator */}
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Add Admin Operator</CardTitle>
@@ -144,6 +155,7 @@ export default function AdminManagement() {
         </CardContent>
       </Card>
 
+      {/* Card for Listing Admin Operators */}
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Admin Operators</CardTitle>
@@ -152,19 +164,21 @@ export default function AdminManagement() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="text-xl  text-gray-500">
-                <TableHead>Email</TableHead>
-                <TableHead>Admin Type</TableHead>
-                <TableHead>Permissions</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody className="text-lg">
-              {adminOperators?.map((operator, index) => {
-                return (
-                  <TableRow key={index}>
+          {loading ? (
+            <p>Loading...</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="text-xl text-gray-500">
+                  <TableHead>Email</TableHead>
+                  <TableHead>Admin Type</TableHead>
+                  <TableHead>Permissions</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="text-lg">
+                {adminOperators?.map((operator, index) => (
+                  <TableRow key={operator.id || index}>
                     <TableCell>{operator.email}</TableCell>
                     <TableCell>{operator.adminType}</TableCell>
                     <TableCell>
@@ -175,7 +189,7 @@ export default function AdminManagement() {
                               <span className="font-semibold capitalize">
                                 {category}:{" "}
                               </span>
-                              {Object?.entries(perms)
+                              {Object.entries(perms)
                                 .filter(([, value]) => value)
                                 .map(([permission]) => permission)
                                 .join(", ")}
@@ -191,15 +205,16 @@ export default function AdminManagement() {
                         variant="destructive"
                         size="sm"
                         onClick={() => handleDeleteOperator(index)}
+                        disabled={deleting}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
