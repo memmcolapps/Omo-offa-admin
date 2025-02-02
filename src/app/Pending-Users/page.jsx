@@ -24,7 +24,6 @@ const PendingUsers = () => {
     }
   }, [currentPage, getUsers, router, limit]);
 
-  // Update local state when data changes.
   useEffect(() => {
     if (data) {
       setUsers(data.users);
@@ -32,14 +31,12 @@ const PendingUsers = () => {
     }
   }, [data]);
 
-  // Memoize filtered data so that it's recalculated only when users or filter changes.
   const filteredData = useMemo(() => {
     return users?.filter((user) =>
       user.offaNimiId.toLowerCase().includes(filter.toLowerCase())
     );
   }, [users, filter]);
 
-  // Memoize pagination handlers.
   const handleNextPage = useCallback(() => {
     if (currentPage < totalPages) {
       setCurrentPage((prevPage) => prevPage + 1);
@@ -52,7 +49,6 @@ const PendingUsers = () => {
     }
   }, [currentPage]);
 
-  // Memoize row click handler.
   const handleRowClick = useCallback(
     (user) => {
       const userEncoded = encodeURIComponent(JSON.stringify(user));
@@ -61,7 +57,6 @@ const PendingUsers = () => {
     [router]
   );
 
-  // Memoize columns so that the definition is stable across renders.
   const columns = useMemo(
     () => [
       { key: "firstName", header: "Name" },

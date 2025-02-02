@@ -16,7 +16,6 @@ export default function AdminActionsLog() {
   const { getLogs, data, loading } = useGetLogs();
   const router = useRouter();
 
-  // Effect to fetch logs when the currentPage changes
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -26,20 +25,18 @@ export default function AdminActionsLog() {
     }
   }, [currentPage, getLogs, router]);
 
-  // Effect to update actions and totalPages when new data arrives
   useEffect(() => {
     if (data) {
       setActions(data.data);
       setTotalPages(data.pagination?.totalPages || 1);
     }
   }, [data]);
+  
 
-  // Memoize the event handler for row clicks
   const handleRowClick = useCallback((item) => {
     console.log(item);
   }, []);
 
-  // Memoize pagination handlers
   const handleNextPage = useCallback(() => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   }, [totalPages]);
@@ -48,7 +45,6 @@ export default function AdminActionsLog() {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
   }, []);
 
-  // Memoize columns definition to avoid recreating it on every render
   const columns = useMemo(
     () => [
       { key: "action", header: "Action" },
