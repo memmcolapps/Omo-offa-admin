@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import useGetUsers from "@/app/hooks/useGetUsers";
-import { Input } from "@/app/components/ui/input";
 import { Search } from "lucide-react";
+
+import useGetUsers from "../hooks/useGetUsers";
+import { Input } from "../components/ui/input";
 import { ReusableTable } from "../components/common/table";
 
 const PendingUsers = () => {

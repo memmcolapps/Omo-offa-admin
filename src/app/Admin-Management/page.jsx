@@ -8,6 +8,7 @@ import { Input } from "../components/ui/input";
 import { Checkbox } from "../components/ui/checkbox";
 import useGetAdmins from "../hooks/useGetAdmins";
 import useDeleteOperator from "../hooks/useDeleteOperator";
+import useAddAdminOperator from "../hooks/useAddAdminOperator";
 import {
   Table,
   TableBody,
@@ -27,6 +28,7 @@ import {
 export default function AdminManagement() {
   const { getAdmins, data, loading } = useGetAdmins();
   const { deleteOperator, loading: deleting } = useDeleteOperator();
+  const { addAdminOperator, loading: adding } = useAddAdminOperator();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [permissions, setPermissions] = useState({
@@ -62,11 +64,16 @@ export default function AdminManagement() {
     }));
   }, []);
 
-  // Memoize the add operator function.
   const handleAddOperator = useCallback(() => {
     if (email && password) {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        redirect("/");
+      }
       const newOperator = { email, password, permissions };
+      addAdminOperator(token, newOperator);
       setAdminOperators((prevOperators) => [...prevOperators, newOperator]);
+
       setEmail("");
       setPassword("");
       setPermissions({
@@ -76,9 +83,8 @@ export default function AdminManagement() {
         reports: { generate: false, view: false },
       });
     }
-  }, [email, password, permissions]);
+  }, [email, password, permissions, addAdminOperator]);
 
-  // Memoize the delete operator function.
   const handleDeleteOperator = useCallback(
     (index) => {
       const token = localStorage.getItem("token");
@@ -97,7 +103,6 @@ export default function AdminManagement() {
 
   return (
     <div className="container mx-auto p-10 space-y-8">
-      {/* Card for Adding Admin Operator */}
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Add Admin Operator</CardTitle>
@@ -154,7 +159,6 @@ export default function AdminManagement() {
         </CardContent>
       </Card>
 
-      {/* Card for Listing Admin Operators */}
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Admin Operators</CardTitle>

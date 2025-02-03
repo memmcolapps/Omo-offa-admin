@@ -21,7 +21,7 @@
   "plugins": ["react", "import"],
   "rules": {
     "react/react-in-jsx-scope": "off",
-    "react/prop-types": "warn",
+    "react/prop-types": "off",
     "import/order": [
       "warn",
       {
