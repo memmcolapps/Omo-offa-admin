@@ -77,7 +77,7 @@ const Login = () => {
                         required
                         type="text"
                         placeholder="Enter Email"
-                        className="border font-[600] placeholder:text-[#B6B9B8] text-black bg-white placeholder:font-[400] h-[3.7rem] placholder:text-[1.3rem]"
+                        className="border font-[600] placeholder:text-[#B6B9B8] text-black bg-white placeholder:font-[400] h-[3.7rem]"
                       />
                     </FormControl>
                   </FormItem>

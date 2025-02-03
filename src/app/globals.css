@@ -163,6 +163,7 @@ input[type="number"] {
 .custom-placeholder > span {
   color: #b6b9b8 !important;
   font-weight: 600; /* Custom color for placeholder text */
+  font-size: x-large;
 }
 
 .checkmark-small,

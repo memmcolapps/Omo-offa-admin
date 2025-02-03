@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { redirect } from "next/navigation";
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -31,6 +31,7 @@ export default function AdminManagement() {
   const { addAdminOperator, loading: adding } = useAddAdminOperator();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [editing, setEditing] = useState(false);
   const [permissions, setPermissions] = useState({
     operator: { add: false, view: false, edit: false, delete: false },
     audit: { view: false },
@@ -64,14 +65,14 @@ export default function AdminManagement() {
     }));
   }, []);
 
-  const handleAddOperator = useCallback(() => {
+  const handleAddOperator = useCallback(async () => {
     if (email && password) {
       const token = localStorage.getItem("token");
       if (!token) {
         redirect("/");
       }
       const newOperator = { email, password, permissions };
-      addAdminOperator(token, newOperator);
+      await addAdminOperator(token, newOperator);
       setAdminOperators((prevOperators) => [...prevOperators, newOperator]);
 
       setEmail("");
@@ -86,19 +87,37 @@ export default function AdminManagement() {
   }, [email, password, permissions, addAdminOperator]);
 
   const handleDeleteOperator = useCallback(
-    (index) => {
+    async (index) => {
       const token = localStorage.getItem("token");
       if (!token) {
         redirect("/");
       } else {
         const operatorToDelete = adminOperators[index];
-        // Only attempt deletion if an id is present
         if (operatorToDelete?.id) {
-          deleteOperator(token, operatorToDelete.id);
+          await deleteOperator(token, operatorToDelete.id);
+          setAdminOperators((prevOperators) =>
+            prevOperators.filter((op) => op.id !== operatorToDelete.id)
+          );
         }
       }
     },
     [adminOperators, deleteOperator]
+  );
+
+  const handleEditOperator = useCallback(
+    (index) => {
+      const operatorToEdit = adminOperators[index];
+      setEditing(true);
+      setEmail(operatorToEdit.email || ""); // Use empty string if undefined
+      setPassword(operatorToEdit.password || "");
+      setPermissions(operatorToEdit.permissions || []);
+
+      console.log(operatorToEdit);
+
+      setEditing(true);
+    },
+
+    [adminOperators]
   );
 
   return (
@@ -152,6 +171,7 @@ export default function AdminManagement() {
                 </div>
               ))}
             </div>
+
             <Button onClick={handleAddOperator}>
               <Plus className="mr-2 h-4 w-4" /> Add Operator
             </Button>
@@ -211,6 +231,14 @@ export default function AdminManagement() {
                         disabled={deleting}
                       >
                         <Trash2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditOperator(index)}
+                        disabled={editing}
+                      >
+                        <Pencil className="h-4 w-4 ml-2" />
                       </Button>
                     </TableCell>
                   </TableRow>
