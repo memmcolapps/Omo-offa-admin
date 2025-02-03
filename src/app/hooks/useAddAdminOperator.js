@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "react-toastify";
 
 import useFetchAPI from "./useFetch";
@@ -15,7 +15,7 @@ const useAddAdminOperator = () => {
    * @param {*} data
    */
 
-  const addAdminOperator = async (token, data) => {
+  const addAdminOperator = useCallback(async (token, data) => {
     try {
       setLoading(true);
       const response = await fetchAPI(`api/v1/admin/add-operator`, {
@@ -37,7 +37,7 @@ const useAddAdminOperator = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return { addAdminOperator, data, loading };
 };
