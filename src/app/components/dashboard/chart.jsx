@@ -1,22 +1,8 @@
 "use client";
-
-import { TrendingUp } from "lucide-react";
 import { Bar, BarChart, XAxis, YAxis } from "recharts";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { Card, CardContent } from "../ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart";
 import MaxContainer from "../common/maxcontainer";
 
 export const description = "A mixed bar chart";

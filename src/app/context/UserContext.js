@@ -1,8 +1,8 @@
 // app/context/UserContext.js
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import useGetLoggedInAdmin from "@/app/hooks/useAdminLoggedIn";
+import React, { createContext, useContext, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
+import useGetLoggedInAdmin from "../hooks/useAdminLoggedIn";
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {

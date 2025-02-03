@@ -1,6 +1,7 @@
 import "./globals.css";
 import { Manrope } from "next/font/google";
 import { Suspense } from "react";
+
 import LayoutWrapper from "./components/LayoutWrapper";
 
 const manrope = Manrope({

@@ -1,8 +1,9 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+
 import { DashboardChart } from "../components/dashboard/chart";
-import useGetDashboard from "@/app/hooks/useGetDashboard";
+import useGetDashboard from "../hooks/useGetDashboard";
 
 const Dashboard = () => {
   const { getDashboard, data, loading } = useGetDashboard();

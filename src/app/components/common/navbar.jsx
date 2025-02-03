@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Button } from "@/app/components/ui/button";
+
+import { Button } from "../ui/button";
 
 const Navbar = () => {
   const router = useRouter();

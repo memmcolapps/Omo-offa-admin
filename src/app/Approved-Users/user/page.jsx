@@ -1,8 +1,8 @@
 "use client";
-
-import { Suspense, useEffect, useState } from "react";
-import UserProfileForm from "../../components/common/userinfo";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+
+import UserProfileForm from "../../components/common/userinfo";
 
 const UserApprovedProfile = () => {
   const searchParams = useSearchParams();

@@ -1,10 +1,11 @@
 "use client";
-
 import { useState, useEffect, useCallback } from "react";
+import { redirect } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
-import { Button } from "@/app/components/ui/button";
-import { Input } from "@/app/components/ui/input";
-import { Checkbox } from "@/app/components/ui/checkbox";
+
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Checkbox } from "../components/ui/checkbox";
 import useGetAdmins from "../hooks/useGetAdmins";
 import useDeleteOperator from "../hooks/useDeleteOperator";
 import {
@@ -14,18 +15,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/app/components/ui/table";
+} from "../components/ui/table";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/app/components/ui/card";
-import { useRouter } from "next/navigation";
+} from "../components/ui/card";
 
 export default function AdminManagement() {
-  const router = useRouter();
   const { getAdmins, data, loading } = useGetAdmins();
   const { deleteOperator, loading: deleting } = useDeleteOperator();
   const [email, setEmail] = useState("");
@@ -41,11 +40,11 @@ export default function AdminManagement() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
-      router.push("/");
+      redirect("/");
     } else {
       getAdmins(token);
     }
-  }, [getAdmins, router]);
+  }, [getAdmins]);
 
   useEffect(() => {
     if (data) {
@@ -84,7 +83,7 @@ export default function AdminManagement() {
     (index) => {
       const token = localStorage.getItem("token");
       if (!token) {
-        router.push("/");
+        redirect("/");
       } else {
         const operatorToDelete = adminOperators[index];
         // Only attempt deletion if an id is present
@@ -93,7 +92,7 @@ export default function AdminManagement() {
         }
       }
     },
-    [adminOperators, deleteOperator, router]
+    [adminOperators, deleteOperator]
   );
 
   return (

@@ -1,6 +1,6 @@
 "use client";
-
 import { usePathname } from "next/navigation";
+
 import { SidebarProvider } from "../components/ui/sidebar";
 import { CustomSidebar } from "../components/common/sidebar";
 import Navbar from "../components/common/navbar";

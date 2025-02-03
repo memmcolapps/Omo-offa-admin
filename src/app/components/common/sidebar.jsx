@@ -1,10 +1,8 @@
 "use client";
-
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useUser } from "@/app/context/UserContext";
 import {
   LayoutDashboard,
   Hourglass,
@@ -15,6 +13,7 @@ import {
   FolderKanban,
 } from "lucide-react";
 
+import { useUser } from "../../context/UserContext";
 import {
   Sidebar,
   SidebarContent,
@@ -22,7 +21,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-} from "@/app/components/ui/sidebar";
+} from "../../components/ui/sidebar";
 
 const menuItems = [
   {

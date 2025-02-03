@@ -1,22 +1,23 @@
 "use client";
-import { Input } from "@/app/components/ui/input";
-import { Button } from "@/app/components/ui/button";
+import { redirect } from "next/navigation";
+import { ToastContainer } from "react-toastify";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useState, useEffect } from "react";
-import * as z from "zod";
+import { useForm } from "react-hook-form";
+
+import { Input } from "../../components/ui/input";
+import { Button } from "../../components/ui/button";
 import {
   Form,
   FormField,
   FormItem,
   FormLabel,
   FormControl,
-} from "@/app/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import useLogin from "@/app/hooks/useLogin";
-import { ToastContainer } from "react-toastify";
+} from "../../components/ui/form";
+import useLogin from "../../hooks/useLogin";
 import "react-toastify/dist/ReactToastify.css";
-import { useRouter } from "next/navigation";
 import Navbar from "./homeNavbar";
 
 const formSchema = z.object({
@@ -26,7 +27,6 @@ const formSchema = z.object({
 const Login = () => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const { login, loading, data } = useLogin();
-  const router = useRouter();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -48,15 +48,15 @@ const Login = () => {
   useEffect(() => {
     if (data && data.token) {
       localStorage.setItem("token", data.token);
-      router.push("/Dashboard");
+      redirect("/Dashboard");
     }
-  }, [data, router]);
+  }, [data]);
 
   return (
     <>
       <ToastContainer />
       <Navbar />
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center m-28">
         <div className="p-[3.5rem] custom bg-white rounded-[1rem] w-[50rem]">
           <p className="font-[800] text-[2rem] text-[#07200B] text-center mb-[1.5rem]">
             Admin Login

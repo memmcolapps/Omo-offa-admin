@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+
 import {
   Table,
   TableBody,
@@ -6,7 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/app/components/ui/table";
+} from "../ui/table";
 
 export function ReusableTable({
   columns,

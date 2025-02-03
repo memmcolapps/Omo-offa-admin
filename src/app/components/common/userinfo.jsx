@@ -1,11 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import MaxContainer from "./maxcontainer";
 import Image from "next/image";
-import useChangeUserStatus from "@/app/hooks/useChangeUserStatus";
 import { useRouter } from "next/navigation";
-import useEditUderData from "@/app/hooks/useEditUserData";
-import { useUser } from "@/app/context/UserContext";
+
+import MaxContainer from "./maxcontainer";
+import useChangeUserStatus from "../../hooks/useChangeUserStatus";
+import useEditUderData from "../../hooks/useEditUserData";
+import { useUser } from "../..//context/UserContext";
 
 const UserProfileForm = ({ user, showApproveReject }) => {
   const router = useRouter();

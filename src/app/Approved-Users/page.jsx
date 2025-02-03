@@ -1,10 +1,10 @@
 "use client";
-
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import useGetUsers from "@/app/hooks/useGetUsers";
-import { Input } from "@/app/components/ui/input";
+import { redirect, useRouter } from "next/navigation";
 import { Search } from "lucide-react";
+
+import useGetUsers from "../hooks/useGetUsers";
+import { Input } from "../components/ui/input";
 import { ReusableTable } from "../components/common/table";
 
 const ApprovedUsers = () => {
@@ -16,15 +16,14 @@ const ApprovedUsers = () => {
   const router = useRouter();
   const [filter, setFilter] = useState("");
 
-  // Fetch approved users when currentPage (or token) changes.
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       getUsers("APPROVED", token, currentPage, limit);
     } else {
-      router.push("/");
+      redirect("/");
     }
-  }, [currentPage, getUsers, router, limit]);
+  }, [currentPage, getUsers, limit]);
 
   // Update users and totalPages whenever new data arrives.
   useEffect(() => {
@@ -110,6 +109,7 @@ const ApprovedUsers = () => {
             handlePrevPage={handlePrevPage}
             handleNextPage={handleNextPage}
             handleRowClick={handleRowClick}
+            emptyMessage="No users found."
           />
         </>
       )}

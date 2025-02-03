@@ -1,10 +1,10 @@
 "use client";
-
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { Search } from "lucide-react";
-import { Input } from "@/app/components/ui/input";
+import { redirect } from "next/navigation";
+
+import { Input } from "../components/ui/input";
 import useGetLogs from "../hooks/useGetLogs";
-import { useRouter } from "next/navigation";
 import { ReusableTable } from "../components/common/table";
 
 export default function AdminActionsLog() {
@@ -14,16 +14,15 @@ export default function AdminActionsLog() {
   const [filter, setFilter] = useState("");
   const limit = 50;
   const { getLogs, data, loading } = useGetLogs();
-  const router = useRouter();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
-      router.push("/");
+      redirect("/");
     } else {
       getLogs(token, currentPage, limit);
     }
-  }, [currentPage, getLogs, router]);
+  }, [currentPage, getLogs]);
 
   useEffect(() => {
     if (data) {
@@ -31,7 +30,6 @@ export default function AdminActionsLog() {
       setTotalPages(data.pagination?.totalPages || 1);
     }
   }, [data]);
-  
 
   const handleRowClick = useCallback((item) => {
     console.log(item);
