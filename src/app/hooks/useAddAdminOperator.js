@@ -33,7 +33,6 @@ const useAddAdminOperator = () => {
     } catch (error) {
       const networkError = error.message || "Network error";
       toast.error(networkError);
-      console.error("Network Error:", networkError);
     } finally {
       setLoading(false);
     }

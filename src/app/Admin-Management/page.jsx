@@ -28,7 +28,7 @@ import {
 export default function AdminManagement() {
   const { getAdmins, data, loading } = useGetAdmins();
   const { deleteOperator, loading: deleting } = useDeleteOperator();
-  const { addAdminOperator, loading: adding } = useAddAdminOperator();
+  const { addAdminOperator } = useAddAdminOperator();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [editing, setEditing] = useState(false);

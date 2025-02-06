@@ -1,9 +1,11 @@
 "use client";
-import { use, useState } from "react";
+
+import { useState } from "react";
+import { X } from "lucide-react";
+import { format } from "date-fns";
 
 import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
+import { Calendar } from "../components/ui/calendar";
 import {
   Select,
   SelectContent,
@@ -12,133 +14,195 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../components/ui/popover";
+import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
+import { cn } from "../../lib/utils";
 
-export default function ReportGenerator() {
-  const [reportData, setReportData] = useState({
-    ward: "",
-    profession: "",
-    gender: "",
-    age: "",
-    country: "",
-  });
-  const [generatedReport, setGeneratedReport] = useState("");
+const filterFields = [
+  {
+    id: "dateFrom",
+    label: "From",
+    type: "date",
+  },
+  {
+    id: "dateTo",
+    label: "To",
+    type: "date",
+  },
+  {
+    id: "category",
+    label: "Category",
+    type: "select",
+    options: ["Personal", "Business", "Education", "Healthcare", "Finance"],
+  },
+  {
+    id: "ninStatus",
+    label: "NIN Status",
+    type: "select",
+    options: ["Verified", "Pending", "Rejected", "Not Submitted"],
+  },
+  {
+    id: "idCardStatus",
+    label: "ID card status",
+    type: "select",
+    options: ["Active", "Expired", "Processing", "Not Available"],
+  },
+];
 
-  const handleInputChange = (field, value) => {
-    setReportData((prev) => ({ ...prev, [field]: value }));
+export default function FilterPage() {
+  const [values, setValues] = useState({});
+
+  const handleClear = (fieldId) => {
+    setValues((prev) => {
+      const newValues = { ...prev };
+      delete newValues[fieldId];
+      return newValues;
+    });
   };
 
-  const generateReport = () => {
-    const report = Object.entries(reportData)
-      .filter(([_, value]) => value !== "")
-      .map(
-        ([key, value]) =>
-          `${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}`
-      )
-      .join("\n");
-    setGeneratedReport(report);
+  const handleReset = () => {
+    setValues({});
+  };
+
+  const handleApply = () => {
+    console.log("Applied filters:", values);
+    // Handle filter application logic here
   };
 
   return (
-    <div className="min-h-screen bg-[#F3FFF2] p-8">
-      <Card className="max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle className="sub_header_i">Report Generator</CardTitle>
-          <CardDescription className="p_i">
-            Enter the details to generate a report
-          </CardDescription>
+    <div className="mx-auto p-8 max-w-7xl">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardTitle>Filter</CardTitle>
+          <Button variant="ghost" size="icon" className="h-6 w-6">
+            <X className="h-4 w-4" />
+          </Button>
         </CardHeader>
         <CardContent>
-          <form className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="ward" className="p_ii">
-                  Ward
-                </Label>
-                <Input
-                  id="ward"
-                  value={reportData.ward}
-                  onChange={(e) => handleInputChange("ward", e.target.value)}
-                  className="p_ii"
-                />
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                {filterFields
+                  .filter((field) => field.type === "date")
+                  .map((field) => (
+                    <div key={field.id}>
+                      <label className="text-sm font-medium">
+                        {field.label}
+                      </label>
+                      <div className="flex items-center justify-between mt-1.5">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !values[field.id] && "text-muted-foreground"
+                              )}
+                            >
+                              {values[field.id] ? (
+                                format(values[field.id], "PPP")
+                              ) : (
+                                <span>Choose Date</span>
+                              )}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={values[field.id]}
+                              onSelect={(date) =>
+                                setValues((prev) => ({
+                                  ...prev,
+                                  [field.id]: date,
+                                }))
+                              }
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        {values[field.id] && (
+                          <Button
+                            variant="ghost"
+                            className="px-2 text-red-500 hover:text-red-600"
+                            onClick={() => handleClear(field.id)}
+                          >
+                            Clear
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="profession" className="p_ii">
-                  Profession
-                </Label>
-                <Input
-                  id="profession"
-                  value={reportData.profession}
-                  onChange={(e) =>
-                    handleInputChange("profession", e.target.value)
-                  }
-                  className="p_ii"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="gender" className="p_ii">
-                  Gender
-                </Label>
-                <Select
-                  onValueChange={(value) => handleInputChange("gender", value)}
-                >
-                  <SelectTrigger className="p_ii">
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="age" className="p_ii">
-                  Age
-                </Label>
-                <Input
-                  id="age"
-                  type="number"
-                  value={reportData.age}
-                  onChange={(e) => handleInputChange("age", e.target.value)}
-                  className="p_ii"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="country" className="p_ii">
-                  Country of Residence
-                </Label>
-                <Input
-                  id="country"
-                  value={reportData.country}
-                  onChange={(e) => handleInputChange("country", e.target.value)}
-                  className="p_ii"
-                />
-              </div>
+              {filterFields
+                .filter((field) => field.type === "select")
+                .map((field) => (
+                  <div key={field.id}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-sm font-medium">
+                        {field.label}
+                      </label>
+                      {values[field.id] && (
+                        <Button
+                          variant="ghost"
+                          className="px-2 text-red-500 hover:text-red-600"
+                          onClick={() => handleClear(field.id)}
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                    <Select
+                      value={values[field.id]}
+                      onValueChange={(value) =>
+                        setValues((prev) => ({ ...prev, [field.id]: value }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select option" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {field.options?.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
             </div>
+          </div>
+          <div className="flex justify-between mt-6">
             <Button
-              onClick={generateReport}
-              type="button"
-              className="w-full p_ii"
+              variant="secondary"
+              className="bg-green-50 hover:bg-green-100 text-black"
+              onClick={handleReset}
             >
-              Generate Report
+              Reset
             </Button>
-          </form>
-          {generatedReport && (
-            <div className="mt-8">
-              <h3 className="sub_header_ii mb-4">Generated Report</h3>
-              <pre className="p_i bg-muted p-4 rounded-md whitespace-pre-wrap">
-                {generatedReport}
-              </pre>
-            </div>
-          )}
+            <Button
+              className="bg-green-800 hover:bg-green-900 text-white"
+              onClick={handleApply}
+            >
+              Apply
+            </Button>
+          </div>
         </CardContent>
       </Card>
+
+      {/* Debug: Show current filters */}
+      {Object.keys(values).length > 0 && (
+        <pre className="mt-4 p-4 bg-gray-100 rounded">
+          {JSON.stringify(values, null, 2)}
+        </pre>
+      )}
     </div>
   );
 }
