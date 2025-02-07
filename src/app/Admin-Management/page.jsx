@@ -33,7 +33,6 @@ export default function AdminManagement() {
   const [password, setPassword] = useState("");
   const [editing, setEditing] = useState(false);
   const [permissions, setPermissions] = useState({
-    operator: { add: false, view: false, edit: false, delete: false },
     audit: { view: false },
     user: { view: false, edit: false, approve: false },
     reports: { generate: false, view: false },
@@ -78,7 +77,6 @@ export default function AdminManagement() {
       setEmail("");
       setPassword("");
       setPermissions({
-        operator: { add: false, view: false, edit: false, delete: false },
         audit: { view: false },
         user: { view: false, edit: false, approve: false },
         reports: { generate: false, view: false },
