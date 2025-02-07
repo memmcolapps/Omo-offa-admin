@@ -70,8 +70,9 @@ export default function AdminManagement() {
       if (!token) {
         redirect("/");
       }
-      const newOperator = { email, password, permissions };
+      let newOperator = { email, password, permissions };
       await addAdminOperator(token, newOperator);
+      newOperator = { ...newOperator, adminType: "operator" };
       setAdminOperators((prevOperators) => [...prevOperators, newOperator]);
 
       setEmail("");
