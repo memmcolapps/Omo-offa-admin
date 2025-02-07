@@ -2,6 +2,8 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { redirect, useRouter } from "next/navigation";
 import { Search } from "lucide-react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import useGetUsers from "../hooks/useGetUsers";
 import { Input } from "../components/ui/input";
@@ -84,6 +86,7 @@ const ApprovedUsers = () => {
 
   return (
     <div className="p-10 w-full">
+      <ToastContainer />
       {loading ? (
         <div className="text-2xl">Loading...</div> // Loading state
       ) : (

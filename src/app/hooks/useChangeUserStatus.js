@@ -30,6 +30,12 @@ const useChangeUserStatus = () => {
 
       const responseData = await response.json();
 
+      if (responseData.success) {
+        toast.success("User status changed successfully");
+      } else {
+        toast.error("User status not changed");
+      }
+
       setData(responseData);
     } catch (error) {
       const networkError = error.message || "Network error";

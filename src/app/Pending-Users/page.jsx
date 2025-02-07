@@ -2,6 +2,8 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import useGetUsers from "../hooks/useGetUsers";
 import { Input } from "../components/ui/input";
@@ -73,36 +75,39 @@ const PendingUsers = () => {
   );
 
   return (
-    <div className="p-10 w-full">
-      {loading ? (
-        <div className="text-2xl">Loading...</div> // Show loading state
-      ) : (
-        <>
-          <div className="w-1/4 py-[3rem] text-[2rem]">
-            <div className="relative">
-              <Search className="w-6 h-6 text-black absolute left-3 top-1/2 transform -translate-y-1/2" />
-              <Input
-                type="text"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                placeholder="Search by OffaNimiID"
-                className="pl-12 pr-4 py-5 w-full text-lg rounded-full border-2 border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all duration-300 ease-in-out placeholder-gray-400 font-medium"
-              />
+    <>
+      <ToastContainer />
+      <div className="p-10 w-full">
+        {loading ? (
+          <div className="text-2xl">Loading...</div> // Show loading state
+        ) : (
+          <>
+            <div className="w-1/4 py-[3rem] text-[2rem]">
+              <div className="relative">
+                <Search className="w-6 h-6 text-black absolute left-3 top-1/2 transform -translate-y-1/2" />
+                <Input
+                  type="text"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  placeholder="Search by OffaNimiID"
+                  className="pl-12 pr-4 py-5 w-full text-lg rounded-full border-2 border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all duration-300 ease-in-out placeholder-gray-400 font-medium"
+                />
+              </div>
             </div>
-          </div>
-          <ReusableTable
-            columns={columns}
-            data={filteredData}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={data.pagination?.totalUsers}
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
-            handleRowClick={handleRowClick}
-          />
-        </>
-      )}
-    </div>
+            <ReusableTable
+              columns={columns}
+              data={filteredData}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={data.pagination?.totalUsers}
+              handlePrevPage={handlePrevPage}
+              handleNextPage={handleNextPage}
+              handleRowClick={handleRowClick}
+            />
+          </>
+        )}
+      </div>
+    </>
   );
 };
 

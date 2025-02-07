@@ -28,6 +28,11 @@ const useAddAdminOperator = () => {
       });
 
       const responseData = await response.json();
+      if (responseData.success) {
+        toast.success("Admin operator added successfully");
+      } else {
+        toast.error("Admin operator not added");
+      }
 
       setData(responseData);
     } catch (error) {

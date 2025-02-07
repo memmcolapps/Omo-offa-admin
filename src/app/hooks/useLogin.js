@@ -20,6 +20,11 @@ const useLogin = () => {
       });
 
       const responseData = await response.json();
+      if (responseData.success) {
+        toast.success("Login successful");
+      } else {
+        toast.error("Login failed");
+      }
 
       setData(responseData);
     } catch (error) {

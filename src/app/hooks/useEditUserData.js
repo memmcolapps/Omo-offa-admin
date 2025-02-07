@@ -29,6 +29,11 @@ const useEditUderData = () => {
       });
 
       const responseData = await response.json();
+      if (responseData.success) {
+        toast.success("User data updated successfully");
+      } else {
+        toast.error("User data not updated");
+      }
 
       setData(responseData);
     } catch (error) {
