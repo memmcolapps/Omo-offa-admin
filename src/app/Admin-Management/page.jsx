@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { redirect } from "next/navigation";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { BadgeX, Pencil, Plus, Trash2 } from "lucide-react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -11,6 +11,7 @@ import { Checkbox } from "../components/ui/checkbox";
 import useGetAdmins from "../hooks/useGetAdmins";
 import useDeleteOperator from "../hooks/useDeleteOperator";
 import useAddAdminOperator from "../hooks/useAddAdminOperator";
+import useEditPermission from "../hooks/useEditPermission";
 import {
   Table,
   TableBody,
@@ -26,10 +27,12 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
+import { EditPermissionDialog } from "../components/common/editPermissionDialog";
 
 export default function AdminManagement() {
   const { getAdmins, data, loading } = useGetAdmins();
   const { deleteOperator, loading: deleting } = useDeleteOperator();
+  const { editPermission } = useEditPermission();
   const { addAdminOperator } = useAddAdminOperator();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,6 +43,8 @@ export default function AdminManagement() {
     reports: { generate: false, view: false },
   });
   const [adminOperators, setAdminOperators] = useState([]);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedOperator, setSelectedOperator] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -107,19 +112,31 @@ export default function AdminManagement() {
   const handleEditOperator = useCallback(
     (index) => {
       const operatorToEdit = adminOperators[index];
-      setEditing(true);
-      setEmail(operatorToEdit.email || ""); // Use empty string if undefined
-      setPassword(operatorToEdit.password || "");
-      setPermissions(operatorToEdit.permissions || []);
-
-      console.log(operatorToEdit);
-
-      setEditing(true);
+      setSelectedOperator(operatorToEdit);
+      setIsEditDialogOpen(true);
     },
-
     [adminOperators]
   );
 
+  const handleSavePermissions = useCallback(
+    (updatedPermissions) => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        redirect("/");
+      } else {
+        if (selectedOperator) {
+          editPermission(token, selectedOperator.email, updatedPermissions);
+          const updatedOperators = adminOperators.map((op) =>
+            op.id === selectedOperator.id
+              ? { ...op, permissions: updatedPermissions }
+              : op
+          );
+          setAdminOperators(updatedOperators);
+        }
+      }
+    },
+    [selectedOperator, adminOperators]
+  );
   return (
     <>
       <ToastContainer />
@@ -234,7 +251,7 @@ export default function AdminManagement() {
                           onClick={() => handleDeleteOperator(index)}
                           disabled={deleting}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <BadgeX className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="outline"
@@ -253,6 +270,12 @@ export default function AdminManagement() {
           </CardContent>
         </Card>
       </div>
+      <EditPermissionDialog
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        operator={selectedOperator}
+        onSave={handleSavePermissions}
+      />
     </>
   );
 }

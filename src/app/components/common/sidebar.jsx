@@ -108,7 +108,7 @@ const menuItems = [
     name: "Admin Management",
     href: "/Admin-Management",
     icon: <FolderKanban size={15} />,
-    userType: ["superadmin"], // Only superadmin can access this
+    userType: ["superadmin"],
   },
   {
     name: "Audit Log",

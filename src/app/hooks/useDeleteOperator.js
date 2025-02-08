@@ -1,7 +1,8 @@
 "use client";
-import useFetchAPI from "./useFetch";
 import { useState } from "react";
 import { toast } from "react-toastify";
+
+import useFetchAPI from "./useFetch";
 
 const useDeleteOperator = () => {
   const fetchAPI = useFetchAPI();
