@@ -11,6 +11,7 @@ import {
   Clipboard,
   Logs,
   FolderKanban,
+  ChartLine,
 } from "lucide-react";
 
 import { useUser } from "../../context/UserContext";
@@ -99,6 +100,15 @@ const menuItems = [
     name: "Generate Report",
     href: "/Generate-Report",
     icon: <Clipboard size={15} />,
+    userType: ["superadmin", "operator"],
+    permissions: {
+      reports: { view: true },
+    },
+  },
+  {
+    name: "Report Summary",
+    href: "/Report-Summary",
+    icon: <ChartLine size={15} />,
     userType: ["superadmin", "operator"],
     permissions: {
       reports: { view: true },
