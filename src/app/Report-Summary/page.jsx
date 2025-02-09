@@ -9,6 +9,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
+import { useRouter } from "next/navigation";
 
 import {
   Card,
@@ -29,57 +30,26 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "../components/ui/chart";
-
-const mockData = {
-  wards: {
-    type: "wards",
-    items: [
-      { name: "Ward A", count: 150 },
-      { name: "Ward B", count: 200 },
-      { name: "Ward C", count: 175 },
-      { name: "Ward D", count: 225 },
-      { name: "Ward E", count: 190 },
-    ],
-  },
-  compounds: {
-    type: "compounds",
-    items: [
-      { name: "Compound 1", count: 80 },
-      { name: "Compound 2", count: 120 },
-      { name: "Compound 3", count: 95 },
-      { name: "Compound 4", count: 110 },
-      { name: "Compound 5", count: 105 },
-    ],
-  },
-  professions: {
-    type: "professions",
-    items: [
-      { name: "Doctor", count: 50 },
-      { name: "Teacher", count: 75 },
-      { name: "Engineer", count: 60 },
-      { name: "Nurse", count: 80 },
-      { name: "Accountant", count: 45 },
-    ],
-  },
-};
-
-export async function fetchReportData(type) {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  return mockData[type];
-}
+import useGetReport from "../hooks/useGetReport";
+import MaxContainer from "../components/common/maxcontainer";
 
 export default function ReportSummary() {
-  const [reportType, setReportType] = useState("wards");
+  const [reportType, setReportType] = useState("wardName");
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { data, getReport } = useGetReport();
+  const router = useRouter();
 
   useEffect(() => {
     async function loadReportData() {
       setLoading(true);
       try {
-        const data = await fetchReportData(reportType);
-        setReportData(data);
+        const token = localStorage.getItem("token");
+        if (!token) {
+          router.push("/");
+        } else {
+          await getReport(token, reportType);
+        }
       } catch (error) {
         console.error("Failed to fetch report data:", error);
       } finally {
@@ -89,6 +59,13 @@ export default function ReportSummary() {
 
     loadReportData();
   }, [reportType]);
+
+  useEffect(() => {
+    if (data) {
+      setReportData(data);
+      console.log(data);
+    }
+  }, [data]);
 
   const handleReportTypeChange = (value) => {
     setReportType(value);
@@ -106,41 +83,49 @@ export default function ReportSummary() {
         <CardContent>
           <div className="mb-6">
             <Select onValueChange={handleReportTypeChange} value={reportType}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px] text-xl">
                 <SelectValue placeholder="Select report type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="wards">Wards</SelectItem>
-                <SelectItem value="compounds">Compounds</SelectItem>
-                <SelectItem value="professions">Professions</SelectItem>
+                <SelectItem value="wardName" className="text-xl">
+                  Wards
+                </SelectItem>
+                <SelectItem value="compoundName" className="text-xl">
+                  Compounds
+                </SelectItem>
+                <SelectItem value="occupation" className="text-xl">
+                  Professions
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
           {loading ? (
             <div className="text-center">Loading...</div>
           ) : reportData ? (
-            <ChartContainer
-              config={{
-                count: {
-                  label: "Count",
-                  color: "hsl(var(--chart-1))",
-                },
-              }}
-              className="h-[400px]"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={reportData.items}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="count" fill="var(--color-count)" />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
+            <MaxContainer>
+              <ChartContainer
+                config={{
+                  count: {
+                    label: "Count",
+                    color: "hsl(var(--chart-1))",
+                  },
+                }}
+                className="h-[400px] w-[95%]"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={reportData.report}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" className="text-[1rem] font-black" />
+                    <YAxis className="text-[1.3rem]" />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="count" fill="var(--color-count)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </MaxContainer>
           ) : (
             <div className="text-center">No data available</div>
           )}
