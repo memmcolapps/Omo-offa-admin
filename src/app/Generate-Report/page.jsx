@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { X } from "lucide-react";
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
 
 import { Button } from "../components/ui/button";
 import { Calendar } from "../components/ui/calendar";
@@ -24,7 +25,10 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
+import { Alert, AlertDescription } from "../components/ui/alert";
 import { cn } from "../../lib/utils";
+import useGenerateReport from "../hooks/useGenerateReport";
+import { downloadCSV } from "../funcs/DownloadReport";
 
 const filterFields = [
   {
@@ -38,27 +42,52 @@ const filterFields = [
     type: "date",
   },
   {
-    id: "category",
-    label: "Category",
+    id: "ward",
+    label: "Ward",
     type: "select",
-    options: ["Personal", "Business", "Education", "Healthcare", "Finance"],
+    options: [
+      "OJOMU WARD",
+      "EESA WARD",
+      "BALOGUN WARD",
+      "SAAWO WARD",
+      "OTHERS",
+    ],
   },
   {
-    id: "ninStatus",
-    label: "NIN Status",
+    id: "verificationStatus",
+    label: "Verification Status",
     type: "select",
-    options: ["Verified", "Pending", "Rejected", "Not Submitted"],
+    options: ["APPROVED", "PENDING", "REJECTED"],
   },
   {
-    id: "idCardStatus",
-    label: "ID card status",
+    id: "idPayment",
+    label: "ID card Payment Status",
     type: "select",
-    options: ["Active", "Expired", "Processing", "Not Available"],
+    options: ["True", "False"],
   },
 ];
 
 export default function FilterPage() {
+  const router = useRouter();
   const [values, setValues] = useState({});
+  const [error, setError] = useState(null);
+  const {
+    generateReport,
+    data,
+    loading,
+    error: reportError,
+  } = useGenerateReport();
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  const validateDates = () => {
+    if (values.dateFrom && values.dateTo) {
+      if (values.dateFrom > values.dateTo) {
+        setError("Start date must be before end date");
+        return false;
+      }
+    }
+    return true;
+  };
 
   const handleClear = (fieldId) => {
     setValues((prev) => {
@@ -66,16 +95,49 @@ export default function FilterPage() {
       delete newValues[fieldId];
       return newValues;
     });
+    setError(null);
   };
 
   const handleReset = () => {
+    if (Object.keys(values).length === 0) return;
+
+    if (!showResetConfirm) {
+      setShowResetConfirm(true);
+      return;
+    }
+
     setValues({});
+    setError(null);
+    setShowResetConfirm(false);
   };
 
-  const handleApply = () => {
-    console.log("Applied filters:", values);
-    // Handle filter application logic here
-  };
+  const handleApply = useCallback(async () => {
+    try {
+      setError(null);
+      if (!validateDates()) return;
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/");
+        return;
+      }
+
+      const result = await generateReport(token, values);
+
+      if (result && result.length > 0) {
+        const shouldDownload = window.confirm(
+          "Report generated successfully. Download now?"
+        );
+        if (shouldDownload) {
+          downloadCSV(result);
+        }
+      } else {
+        setError("No data found for the selected filters");
+      }
+    } catch (err) {
+      setError(err.message || "Failed to generate report");
+    }
+  }, [generateReport, values, router]);
 
   return (
     <div className="mx-auto p-8 max-w-7xl">
@@ -87,6 +149,12 @@ export default function FilterPage() {
           </Button>
         </CardHeader>
         <CardContent>
+          {(error || reportError) && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error || reportError}</AlertDescription>
+            </Alert>
+          )}
+
           <div className="space-y-6">
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -118,12 +186,13 @@ export default function FilterPage() {
                             <Calendar
                               mode="single"
                               selected={values[field.id]}
-                              onSelect={(date) =>
+                              onSelect={(date) => {
                                 setValues((prev) => ({
                                   ...prev,
                                   [field.id]: date,
-                                }))
-                              }
+                                }));
+                                setError(null);
+                              }}
                             />
                           </PopoverContent>
                         </Popover>
@@ -160,9 +229,10 @@ export default function FilterPage() {
                     </div>
                     <Select
                       value={values[field.id]}
-                      onValueChange={(value) =>
-                        setValues((prev) => ({ ...prev, [field.id]: value }))
-                      }
+                      onValueChange={(value) => {
+                        setValues((prev) => ({ ...prev, [field.id]: value }));
+                        setError(null);
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select option" />
@@ -185,24 +255,25 @@ export default function FilterPage() {
               className="bg-green-50 hover:bg-green-100 text-black"
               onClick={handleReset}
             >
-              Reset
+              {showResetConfirm ? "Click again to confirm reset" : "Reset"}
             </Button>
             <Button
               className="bg-green-800 hover:bg-green-900 text-white"
               onClick={handleApply}
+              disabled={loading}
             >
-              Apply
+              {loading ? "Generating..." : "Apply"}
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Debug: Show current filters */}
-      {Object.keys(values).length > 0 && (
-        <pre className="mt-4 p-4 bg-gray-100 rounded">
-          {JSON.stringify(values, null, 2)}
-        </pre>
-      )}
+      {process.env.NODE_ENV === "development" &&
+        Object.keys(values).length > 0 && (
+          <pre className="mt-4 p-4 bg-gray-100 rounded">
+            {JSON.stringify(values, null, 2)}
+          </pre>
+        )}
     </div>
   );
 }
