@@ -13,26 +13,33 @@ export default function AdminActionsLog() {
   const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter] = useState("");
   const limit = 50;
-  const { getLogs, data, loading } = useGetLogs();
+  const { getLogs, data, loading, error } = useGetLogs();
 
+  // Handle authentication on the client side
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      redirect("/");
-    } else {
-      getLogs(token, currentPage, limit);
-    }
-  }, [currentPage, getLogs]);
+    const checkAuth = () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        window.location.href = "/"; // Using window.location instead of redirect for client-side
+      } else {
+        getLogs(token, currentPage, limit, filter); // Added filter parameter
+      }
+    };
+    checkAuth();
+  }, [currentPage, getLogs, filter]); // Added filter to dependencies
 
   useEffect(() => {
     if (data) {
-      setActions(data.data);
+      setActions(data.data || []); // Added fallback empty array
       setTotalPages(data.pagination?.totalPages || 1);
     }
   }, [data]);
 
   const handleRowClick = useCallback((item) => {
-    console.log(item);
+    if (item) {
+      console.log(item);
+      // Add your row click logic here
+    }
   }, []);
 
   const handleNextPage = useCallback(() => {
@@ -43,32 +50,54 @@ export default function AdminActionsLog() {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
   }, []);
 
+  // Debounce filter changes
+  const handleFilterChange = useCallback((e) => {
+    const value = e.target.value;
+    setFilter(value);
+    setCurrentPage(1); // Reset to first page when filtering
+  }, []);
+
   const columns = useMemo(
     () => [
       { key: "action", header: "Action" },
       { key: "email", header: "Admin" },
-      { key: "createdAt", header: "Timestamp" },
+      {
+        key: "createdAt",
+        header: "Timestamp",
+      },
     ],
     []
   );
 
+  if (error) {
+    return (
+      <div className="p-10 text-red-500">
+        Error loading logs: {error.message}
+      </div>
+    );
+  }
+
   return (
     <div className="p-10">
-      <div className="w-1/4 py-[3rem] text-[2rem]">
-        <div className="relative text-xl">
-          <Search className="w-6 h-6 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+      <div className="max-w-md mb-8">
+        {" "}
+        {/* Improved responsive width */}
+        <div className="relative">
+          <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
           <Input
             type="text"
             value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            onChange={handleFilterChange}
             placeholder="Search by action"
-            className="pl-12 pr-4 py-5 w-full text-lg rounded-full border-2 border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all duration-300 ease-in-out placeholder-gray-400 font-medium"
+            className="pl-10 pr-4 py-2 w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all duration-300"
           />
         </div>
       </div>
 
       {loading ? (
-        <p>Loading...</p>
+        <div className="flex justify-center items-center py-10">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        </div>
       ) : (
         <ReusableTable
           columns={columns}
