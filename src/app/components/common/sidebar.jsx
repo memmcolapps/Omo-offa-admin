@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -24,140 +24,133 @@ import {
   SidebarMenuButton,
 } from "../../components/ui/sidebar";
 
-const checkPermission = (user, item) => {
-  if (!user) return false;
-
-  if (user.adminType === "superadmin") return true;
-
-  if (user.adminType === "operator") {
-    if (!item.permissions) return false;
-
-    return Object.entries(item.permissions).some(([category, requirements]) => {
-      const userPermissions = user.permissions?.[category];
-      return userPermissions?.view === true;
-    });
-  }
-
-  return false;
-};
-
-// Separate MenuItem component
-const MenuItem = ({ item, isActive }) => (
-  <SidebarMenuItem className="my-2">
-    <SidebarMenuButton
-      asChild
-      className={`w-full hover:bg-[#007250] rounded-lg transition-colors duration-200 ${
-        isActive ? "bg-[#007250]" : ""
-      }`}
-    >
-      <Link href={item.href} className="flex items-center px-4 py-10">
-        {item.icon}
-        <span className="ml-6 text-2xl">{item.name}</span>
-      </Link>
-    </SidebarMenuButton>
-  </SidebarMenuItem>
-);
-
-// Menu items with permissions required for operators
-const menuItems = [
+const MENU_ITEMS = [
   {
     name: "Dashboard",
     href: "/Dashboard",
-    icon: <LayoutDashboard size={15} />,
+    icon: <LayoutDashboard size={24} className="shrink-0" />,
     userType: ["superadmin", "operator"],
-    permissions: {
-      user: { view: true },
-    },
+    permissions: { user: { view: true } },
   },
   {
     name: "Approved Users",
     href: "/Approved-Users",
-    icon: <UserCheck size={15} />,
+    icon: <UserCheck size={24} className="shrink-0" />,
     userType: ["superadmin", "operator"],
-    permissions: {
-      user: { view: true },
-    },
+    permissions: { user: { view: true } },
   },
   {
     name: "Pending Users",
     href: "/Pending-Users",
-    icon: <Hourglass size={15} />,
+    icon: <Hourglass size={24} className="shrink-0" />,
     userType: ["superadmin", "operator"],
-    permissions: {
-      user: { view: true },
-    },
+    permissions: { user: { view: true } },
   },
   {
     name: "Rejected Users",
     href: "/Rejected-Users",
-    icon: <UserX size={15} />,
+    icon: <UserX size={24} className="shrink-0" />,
     userType: ["superadmin", "operator"],
-    permissions: {
-      user: { view: true },
-    },
+    permissions: { user: { view: true } },
   },
   {
     name: "Generate Report",
     href: "/Generate-Report",
-    icon: <Clipboard size={15} />,
+    icon: <Clipboard size={24} className="shrink-0" />,
     userType: ["superadmin", "operator"],
-    permissions: {
-      reports: { view: true },
-    },
+    permissions: { reports: { view: true } },
   },
   {
     name: "Report Summary",
     href: "/Report-Summary",
-    icon: <ChartLine size={15} />,
+    icon: <ChartLine size={24} className="shrink-0" />,
     userType: ["superadmin", "operator"],
-    permissions: {
-      reports: { view: true },
-    },
+    permissions: { reports: { view: true } },
   },
   {
     name: "Admin Management",
     href: "/Admin-Management",
-    icon: <FolderKanban size={15} />,
+    icon: <FolderKanban size={24} className="shrink-0" />,
     userType: ["superadmin"],
   },
   {
     name: "Audit Log",
     href: "/Action-Logs",
-    icon: <Logs size={15} />,
+    icon: <Logs size={24} className="shrink-0" />,
     userType: ["superadmin", "operator"],
-    permissions: {
-      audit: { view: true },
-    },
+    permissions: { audit: { view: true } },
   },
 ];
+
+const MenuItem = React.memo(({ item, isActive }) => (
+  <SidebarMenuItem className="my-6">
+    <SidebarMenuButton
+      asChild
+      className={`group w-full hover:bg-[#007250] rounded-lg transition-all duration-200 ${
+        isActive ? "bg-[#007250]" : ""
+      }`}
+    >
+      <Link
+        href={item.href}
+        className="flex items-center px-4 py-3 gap-6"
+        aria-current={isActive ? "page" : undefined}
+      >
+        {item.icon}
+        <span className="text-2xl font-medium group-hover:translate-x-1 transition-transform">
+          {item.name}
+        </span>
+      </Link>
+    </SidebarMenuButton>
+  </SidebarMenuItem>
+));
+
+MenuItem.displayName = "MenuItem";
+
+const checkPermission = (user, item) => {
+  if (!user) return false;
+  if (user.adminType === "superadmin") return true;
+  if (user.adminType !== "operator") return false;
+
+  return item.permissions
+    ? Object.entries(item.permissions).some(
+        ([category, requirements]) =>
+          user.permissions?.[category]?.view === true
+      )
+    : false;
+};
 
 export function CustomSidebar() {
   const pathname = usePathname();
   const { user, loading } = useUser();
 
+  const authorizedMenuItems = useMemo(
+    () => MENU_ITEMS.filter((item) => checkPermission(user, item)),
+    [user]
+  );
+
   if (loading) {
     return (
-      <div className="h-screen bg-[#002E20] flex items-center justify-center">
-        <div className="text-[#C8FFC4]">Loading...</div>
-      </div>
+      <aside className="h-screen bg-[#002E20] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-[#C8FFC4] border-t-transparent rounded-full animate-spin" />
+          <div className="text-[#C8FFC4] font-medium">Loading...</div>
+        </div>
+      </aside>
     );
   }
 
-  const authorizedMenuItems = menuItems.filter((item) =>
-    checkPermission(user, item)
-  );
-
   return (
     <Sidebar className="h-screen bg-[#002E20] text-[#C8FFC4]">
-      <SidebarHeader className="h-48 flex items-center justify-center">
-        <Link href="/">
+      <SidebarHeader className="h-48 flex items-center justify-center p-4">
+        <Link href="/" className="transition-opacity hover:opacity-80">
           <Image
             width={100}
             height={43}
-            alt="logo"
+            alt="OffaNimi Logo"
             src="/common/offanimi.svg"
             className="mx-auto"
             priority
+            quality={90}
           />
         </Link>
       </SidebarHeader>
@@ -165,7 +158,7 @@ export function CustomSidebar() {
         <SidebarMenu>
           {authorizedMenuItems.map((item) => (
             <MenuItem
-              key={item.name}
+              key={item.href}
               item={item}
               isActive={pathname === item.href}
             />

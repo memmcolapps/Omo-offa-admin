@@ -1,6 +1,6 @@
 "use client";
-import { redirect } from "next/navigation";
-import { ToastContainer } from "react-toastify";
+import { useRouter } from "next/navigation";
+import { ToastContainer, toast } from "react-toastify";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Eye, EyeOff } from "lucide-react";
@@ -15,18 +15,27 @@ import {
   FormItem,
   FormLabel,
   FormControl,
+  FormMessage,
 } from "../../components/ui/form";
 import useLogin from "../../hooks/useLogin";
 import "react-toastify/dist/ReactToastify.css";
 import Navbar from "./homeNavbar";
 
 const formSchema = z.object({
-  email: z.string().min(1, "Email is required"),
-  password: z.string().min(1, "Password is required"),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(6, "Password must be at least 6 characters"),
 });
+
 const Login = () => {
+  const router = useRouter();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const { login, loading, data } = useLogin();
+  const { login, loading, data, error } = useLogin();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -34,101 +43,140 @@ const Login = () => {
       email: "",
       password: "",
     },
+    mode: "onChange",
   });
 
   const togglePasswordVisibility = () => {
-    setIsPasswordVisible(!isPasswordVisible);
+    setIsPasswordVisible((prev) => !prev);
   };
 
-  const onSubmit = (values) => {
-    const { email, password } = values;
-    login(email, password);
+  const onSubmit = async (values) => {
+    try {
+      await login(values.email, values.password);
+    } catch (err) {
+      toast.error("Login failed. Please check your credentials.");
+    }
   };
 
   useEffect(() => {
-    if (data && data.token) {
+    if (data?.token) {
       localStorage.setItem("token", data.token);
-      redirect("/Dashboard");
+      router.push("/Dashboard");
     }
-  }, [data]);
+  }, [data, router]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message || "An error occurred during login");
+    }
+  }, [error]);
 
   return (
     <>
-      <ToastContainer />
+      <ToastContainer
+        position="top-right"
+        autoClose={4000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnFocusLoss
+        draggable={false}
+        pauseOnHover
+        theme="light"
+      />
       <Navbar />
-      <div className="flex items-center justify-center m-28">
-        <div className="p-[3.5rem] custom bg-white rounded-[1rem] w-[50rem]">
-          <p className="font-[800] text-[2rem] text-[#07200B] text-center mb-[1.5rem]">
+      <main className="flex min-h-[calc(100vh-4rem)]  items-center justify-center bg-gray-50 px-4">
+        <div className="w-full max-w-2xl p-8 bg-white rounded-xl shadow-lg">
+          <h1 className="text-2xl font-bold text-gray-900 text-center mb-6">
             Admin Login
-          </p>
+          </h1>
+
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-6"
+              noValidate
+            >
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-[1.5rem] text-black">
-                      Email
+                    <FormLabel className="text-gray-700">
+                      Email Address
                     </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        required
-                        type="text"
-                        placeholder="Enter Email"
-                        className="border font-[600] placeholder:text-[#B6B9B8] text-black bg-white placeholder:font-[400] h-[3.7rem]"
+                        type="email"
+                        placeholder="Enter your email"
+                        className="h-12 text-base border-gray-300 focus:border-green-500 focus:ring-green-500"
+                        disabled={loading}
+                        autoComplete="email"
                       />
                     </FormControl>
+                    <FormMessage className="text-sm text-red-500" />
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="password"
                 render={({ field }) => (
-                  <FormItem className="mt-[1.5rem] relative">
-                    <FormLabel className="text-[1.2rem] text-black">
-                      Password
-                    </FormLabel>
+                  <FormItem>
+                    <FormLabel className="text-gray-700">Password</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
                           {...field}
                           type={isPasswordVisible ? "text" : "password"}
-                          placeholder="Enter Password"
-                          className="border font-[600] placeholder:text-[#B6B9B8] text-black bg-white placeholder:font-[400] h-[3.7rem] text-[1.3rem] pr-[3rem] placholder:text-[1.3rem]"
+                          placeholder="Enter your password"
+                          className="h-12 text-base border-gray-300 focus:border-green-500 focus:ring-green-500 pr-12"
+                          disabled={loading}
+                          autoComplete="current-password"
                         />
-                        <span
-                          className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
+                        <button
+                          type="button"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none focus:text-gray-700"
                           onClick={togglePasswordVisibility}
+                          aria-label={
+                            isPasswordVisible
+                              ? "Hide password"
+                              : "Show password"
+                          }
                         >
                           {isPasswordVisible ? (
-                            <EyeOff className="w-[2rem] text-black" />
+                            <EyeOff className="w-5 h-5" />
                           ) : (
-                            <Eye className="w-[2rem] text-black" />
+                            <Eye className="w-5 h-5" />
                           )}
-                        </span>
+                        </button>
                       </div>
                     </FormControl>
+                    <FormMessage className="text-sm text-red-500" />
                   </FormItem>
                 )}
               />
+
               <Button
                 type="submit"
-                required
                 disabled={loading || !form.formState.isValid}
-                className="w-full mt-[2.8rem] py-[2rem] rounded-[.5rem] bg-[#002B1E] font-[800] text-[#C8FFC4] text-[1.5rem]"
+                className="w-full h-12 bg-green-900 hover:bg-green-800 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-green-100 font-semibold text-base transition-colors"
               >
-                Log In
-                {loading && (
-                  <Loader2 className="ml-[.5rem] animate-spin w-[1.5rem]" />
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Logging in...</span>
+                  </div>
+                ) : (
+                  "Log In"
                 )}
               </Button>
             </form>
           </Form>
         </div>
-      </div>
+      </main>
     </>
   );
 };
