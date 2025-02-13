@@ -115,12 +115,15 @@ export default function ReportSummary() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={reportData.report}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                    margin={{ top: 20, right: 5, left: 5, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" className="text-[1rem] font-black" />
+                    <XAxis dataKey="name" className="text-[.8rem] font-black" />
                     <YAxis className="text-[1.3rem]" />
-                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartTooltip
+                      content={<ChartTooltipContent />}
+                      className="text-[1.2rem] font-black"
+                    />
                     <Bar dataKey="count" fill="var(--color-count)" />
                   </BarChart>
                 </ResponsiveContainer>

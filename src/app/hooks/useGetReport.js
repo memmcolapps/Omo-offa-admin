@@ -29,12 +29,6 @@ const useGetReport = () => {
 
       const responseData = await response.json();
 
-      if (responseData.success) {
-        toast.success("Report fetched successfully");
-      } else {
-        toast.error("Report not fetched");
-      }
-
       setData(responseData);
     } catch (error) {
       const networkError = error.message || "Network error";
