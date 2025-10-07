@@ -54,8 +54,8 @@ const PendingUsers = () => {
 
   const handleRowClick = useCallback(
     (user) => {
-      const userEncoded = encodeURIComponent(JSON.stringify(user));
-      router.push(`/Pending-Users/user?user=${userEncoded}`);
+      sessionStorage.setItem(`user_${user.id}`, JSON.stringify(user));
+      router.push(`/Pending-Users/user/${user.id}`);
     },
     [router]
   );
