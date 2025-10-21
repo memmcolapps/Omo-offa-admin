@@ -63,7 +63,7 @@ const ApprovedUsers = () => {
   const handleRowClick = useCallback(
     (user) => {
       sessionStorage.setItem(`user_${user.id}`, JSON.stringify(user));
-      router.push(`/Pending-Users/user/${user.id}`);
+      router.push(`/Approved-Users/user/${user.id}`);
     },
     [router]
   );
@@ -71,13 +71,17 @@ const ApprovedUsers = () => {
   // Memoize columns definition.
   const columns = useMemo(
     () => [
-      { key: "firstName", header: "Name" },
+      { key: "firstName", header: "First Name" },
+      { key: "lastName", header: "Last Name" },
       { key: "offaNimiId", header: "OffaNimID" },
       { key: "nin", header: "NIN" },
-      { key: "stateOfResidence", header: "State Of Residence" },
-      { key: "wardName", header: "Ward Name" },
-      { key: "compoundName", header: "Compound Name" },
-      { key: "phoneNumber", header: "Phone Number" },
+      { key: "stateOfResidence", header: "State" },
+      { key: "wardName", header: "Ward" },
+      { key: "compoundName", header: "Compound" },
+      { key: "phoneNumber", header: "Phone" },
+      { key: "occupation", header: "Occupation" },
+      { key: "genotype", header: "Genotype" },
+      { key: "bankName", header: "Bank" },
       { key: "idPayment", header: "ID Payment" },
       { key: "createdAt", header: "Date Added" },
     ],
