@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import "react-toastify/dist/ReactToastify.css";
 import { toast, ToastContainer } from "react-toastify";
+import { Download } from "lucide-react";
 
 import MaxContainer from "./maxcontainer";
 import useChangeUserStatus from "../../hooks/useChangeUserStatus";
@@ -119,6 +120,27 @@ const UserProfileForm = ({ user, showApproveReject }) => {
     }
   };
 
+  const handleDownloadProfilePic = async () => {
+    if (!user?.profilePicUrl) return;
+
+    try {
+      const response = await fetch(user.profilePicUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${user.firstName}_${user.lastName}_profile_picture.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("Profile picture downloaded successfully");
+    } catch (error) {
+      console.error("Error downloading profile picture:", error);
+      toast.error("Error downloading profile picture");
+    }
+  };
+
   const formFields = [
     // Basic Information
     { label: "First Name", name: "firstName" },
@@ -201,19 +223,53 @@ const UserProfileForm = ({ user, showApproveReject }) => {
       <div className="max-w-6xl mx-auto p-6 lg:p-12 bg-white rounded-lg shadow-sm">
         <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-6">
-            <div className="relative w-24 h-24">
-              <Image
-                src="/home/offa_logo.svg"
-                alt="User profile"
-                className="rounded-full"
-                fill
-                priority
-                sizes="(max-width: 96px) 100vw, 96px"
-              />
+            <div className="relative w-32 h-32">
+              {user?.profilePicUrl ? (
+                <div className="relative w-full h-full">
+                  <Image
+                    src={user.profilePicUrl}
+                    alt={`${user.firstName} ${user.lastName} profile`}
+                    className="rounded-full object-cover"
+                    fill
+                    priority
+                    sizes="(max-width: 128px) 100vw, 128px"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      e.target.nextSibling.style.display = "block";
+                    }}
+                  />
+                  <Image
+                    src="/home/offa_logo.svg"
+                    alt="Default profile"
+                    className="rounded-full object-cover hidden"
+                    fill
+                    priority
+                    sizes="(max-width: 128px) 100vw, 128px"
+                  />
+                </div>
+              ) : (
+                <Image
+                  src="/home/offa_logo.svg"
+                  alt="Default profile"
+                  className="rounded-full object-cover"
+                  fill
+                  priority
+                  sizes="(max-width: 128px) 100vw, 128px"
+                />
+              )}
             </div>
             <div>
               <h2 className="text-2xl font-semibold mb-4">User Profile</h2>
               <div className="flex flex-wrap gap-4">
+                {user?.profilePicUrl && (
+                  <button
+                    className="px-4 py-2 text-white bg-purple-600 hover:bg-purple-700 rounded-md transition-colors flex items-center gap-2"
+                    onClick={handleDownloadProfilePic}
+                  >
+                    <Download size={16} />
+                    Download Photo
+                  </button>
+                )}
                 {showApproveReject && canApprove && (
                   <>
                     <button
@@ -381,7 +437,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
           {/* Father's Information Section */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
-              Father's Information
+              Father&apos;s Information
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
@@ -407,7 +463,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
           {/* Mother's Information Section */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
-              Mother's Information
+              Mother&apos;s Information
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
