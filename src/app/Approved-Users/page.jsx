@@ -14,7 +14,7 @@ const ApprovedUsers = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [users, setUsers] = useState([]);
-  const limit = 50;
+  const limit = 20;
   const router = useRouter();
   const [filter, setFilter] = useState("");
 
@@ -31,9 +31,15 @@ const ApprovedUsers = () => {
   useEffect(() => {
     if (data) {
       setUsers(data.users);
-      setTotalPages(data.pagination?.totalPages || 1);
+      // Since API doesn't provide totalPages, we'll calculate it based on hasMore
+      // If hasMore is true, there's at least one more page
+      // If hasMore is false, this is the last page
+      const estimatedTotalPages = data.pagination?.hasMore
+        ? currentPage + 1
+        : currentPage;
+      setTotalPages(estimatedTotalPages);
     }
-  }, [data]);
+  }, [data, currentPage]);
 
   // Memoize the filtered list of users based on the search filter.
   const filteredUsers = useMemo(() => {
@@ -48,10 +54,11 @@ const ApprovedUsers = () => {
   }, []);
 
   const handleNextPage = useCallback(() => {
-    if (currentPage < totalPages) {
+    // Allow next page if hasMore is true or if we're not on the last page
+    if (data?.pagination?.hasMore || currentPage < totalPages) {
       handlePageChange(currentPage + 1);
     }
-  }, [currentPage, totalPages, handlePageChange]);
+  }, [currentPage, totalPages, handlePageChange, data?.pagination?.hasMore]);
 
   const handlePrevPage = useCallback(() => {
     if (currentPage > 1) {
@@ -71,18 +78,40 @@ const ApprovedUsers = () => {
   // Memoize columns definition.
   const columns = useMemo(
     () => [
-      { key: "firstName", header: "First Name" },
-      { key: "lastName", header: "Last Name" },
+      {
+        key: "fullName",
+        header: "Full Name",
+        render: (user) => (
+          <div
+            className="truncate"
+            title={`${user.firstName} ${user.lastName}`}
+          >
+            {user.firstName} {user.lastName}
+          </div>
+        ),
+      },
       { key: "offaNimiId", header: "OffaNimID" },
-      { key: "nin", header: "NIN" },
       { key: "stateOfResidence", header: "State" },
       { key: "wardName", header: "Ward" },
       { key: "compoundName", header: "Compound" },
       { key: "phoneNumber", header: "Phone" },
       { key: "occupation", header: "Occupation" },
-      { key: "genotype", header: "Genotype" },
       { key: "bankName", header: "Bank" },
-      { key: "idPayment", header: "ID Payment" },
+      {
+        key: "idPayment",
+        header: "ID Payment",
+        render: (user) => (
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-medium ${
+              user.idPayment
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
+            }`}
+          >
+            {user.idPayment ? "Paid" : "Pending"}
+          </span>
+        ),
+      },
       { key: "createdAt", header: "Date Added" },
     ],
     []
@@ -95,9 +124,9 @@ const ApprovedUsers = () => {
         <div className="text-2xl">Loading...</div> // Loading state
       ) : (
         <>
-          <div className="w-1/4 py-[3rem] text-[2rem]">
+          <div className="w-full max-w-md py-[3rem] text-[2rem]">
             <div className="relative">
-              <Search className="w-6 h-6 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+              <Search className="w-6 h-6 text-black absolute left-3 top-1/2 transform -translate-y-1/2" />
               <Input
                 type="text"
                 value={filter}
@@ -112,11 +141,17 @@ const ApprovedUsers = () => {
             data={filteredUsers}
             currentPage={currentPage}
             totalPages={totalPages}
-            totalItems={data.pagination?.totalUsers}
+            totalItems={
+              data.pagination?.hasMore
+                ? currentPage * limit + 1
+                : (currentPage - 1) * limit + (data.users?.length || 0)
+            }
             handlePrevPage={handlePrevPage}
             handleNextPage={handleNextPage}
             handleRowClick={handleRowClick}
             emptyMessage="No users found."
+            hasMore={data.pagination?.hasMore || false}
+            hasPrevious={currentPage > 1}
           />
         </>
       )}

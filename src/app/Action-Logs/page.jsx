@@ -12,7 +12,7 @@ export default function AdminActionsLog() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter] = useState("");
-  const limit = 50;
+  const limit = 20;
   const { getLogs, data, loading, error } = useGetLogs();
 
   // Handle authentication on the client side
@@ -31,24 +31,30 @@ export default function AdminActionsLog() {
   useEffect(() => {
     if (data) {
       setActions(data.data || []); // Added fallback empty array
+      // Use the actual totalPages from API response
       setTotalPages(data.pagination?.totalPages || 1);
     }
   }, [data]);
 
   const handleRowClick = useCallback((item) => {
     if (item) {
-      console.log(item);
       // Add your row click logic here
     }
   }, []);
 
   const handleNextPage = useCallback(() => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  }, [totalPages]);
+    // Use hasNextPage from API response
+    if (data?.pagination?.hasNextPage) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  }, [data?.pagination?.hasNextPage]);
 
   const handlePrevPage = useCallback(() => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
-  }, []);
+    // Use hasPreviousPage from API response
+    if (data?.pagination?.hasPreviousPage) {
+      setCurrentPage((prev) => prev - 1);
+    }
+  }, [data?.pagination?.hasPreviousPage]);
 
   // Debounce filter changes
   const handleFilterChange = useCallback((e) => {
@@ -59,11 +65,32 @@ export default function AdminActionsLog() {
 
   const columns = useMemo(
     () => [
-      { key: "action", header: "Action" },
-      { key: "email", header: "Admin" },
+      {
+        key: "action",
+        header: "Action",
+        render: (item) => (
+          <div className="truncate font-medium" title={item.action}>
+            {item.action}
+          </div>
+        ),
+      },
+      {
+        key: "email",
+        header: "Admin",
+        render: (item) => (
+          <div className="truncate" title={item.email}>
+            {item.email}
+          </div>
+        ),
+      },
       {
         key: "createdAt",
         header: "Timestamp",
+        render: (item) => (
+          <div className="truncate text-gray-600" title={item.createdAt}>
+            {new Date(item.createdAt).toLocaleString()}
+          </div>
+        ),
       },
     ],
     []
@@ -104,10 +131,12 @@ export default function AdminActionsLog() {
           data={actions}
           currentPage={currentPage}
           totalPages={totalPages}
-          totalItems={data?.pagination?.totalLogs}
+          totalItems={data?.pagination?.totalLogs || 0}
           handlePrevPage={handlePrevPage}
           handleNextPage={handleNextPage}
           handleRowClick={handleRowClick}
+          hasMore={data?.pagination?.hasNextPage || false}
+          hasPrevious={data?.pagination?.hasPreviousPage || false}
         />
       )}
     </div>

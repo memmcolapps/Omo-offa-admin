@@ -16,7 +16,7 @@ const PendingUsers = () => {
   const [filter, setFilter] = useState("");
   const [totalPages, setTotalPages] = useState(1);
   const [users, setUsers] = useState([]);
-  const limit = 50;
+  const limit = 20;
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -30,9 +30,14 @@ const PendingUsers = () => {
   useEffect(() => {
     if (data) {
       setUsers(data.users);
-      setTotalPages(data.pagination?.totalPages || 1);
+      // Since API doesn't provide totalPages, we'll calculate it based on hasMore
+      // For now, we'll use a large number or calculate based on current data
+      const estimatedTotalPages = data.pagination?.hasMore
+        ? currentPage + 1
+        : currentPage;
+      setTotalPages(estimatedTotalPages);
     }
-  }, [data]);
+  }, [data, currentPage]);
 
   const filteredData = useMemo(() => {
     return users?.filter((user) =>
@@ -82,7 +87,7 @@ const PendingUsers = () => {
           <div className="text-2xl">Loading...</div> // Show loading state
         ) : (
           <>
-            <div className="w-1/4 py-[3rem] text-[2rem]">
+            <div className="w-full max-w-md py-[3rem] text-[2rem]">
               <div className="relative">
                 <Search className="w-6 h-6 text-black absolute left-3 top-1/2 transform -translate-y-1/2" />
                 <Input
@@ -99,10 +104,16 @@ const PendingUsers = () => {
               data={filteredData}
               currentPage={currentPage}
               totalPages={totalPages}
-              totalItems={data.pagination?.totalUsers}
+              totalItems={
+                data.pagination?.hasMore
+                  ? currentPage * limit + 1
+                  : (currentPage - 1) * limit + (data.users?.length || 0)
+              }
               handlePrevPage={handlePrevPage}
               handleNextPage={handleNextPage}
               handleRowClick={handleRowClick}
+              hasMore={data.pagination?.hasMore || false}
+              hasPrevious={currentPage > 1}
             />
           </>
         )}
