@@ -23,6 +23,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "../../components/ui/sidebar";
+import SidebarSkeleton from "./sidebar-skeleton";
 
 const MENU_ITEMS = [
   {
@@ -129,14 +130,7 @@ export function CustomSidebar() {
   );
 
   if (loading) {
-    return (
-      <aside className="h-screen bg-[#002E20] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-4 border-[#C8FFC4] border-t-transparent rounded-full animate-spin" />
-          <div className="text-[#C8FFC4] font-medium">Loading...</div>
-        </div>
-      </aside>
-    );
+    return <SidebarSkeleton />;
   }
 
   return (

@@ -1,7 +1,8 @@
 "use client";
+import { useCallback } from "react";
 
 const useFetchAPI = () => {
-  const fetchAPI = async (endpoint, options) => {
+  const fetchAPI = useCallback(async (endpoint, options) => {
     try {
       const response = await fetch(
         `https://octopus-app-8k2vt.ondigitalocean.app/${endpoint}`,
@@ -19,7 +20,7 @@ const useFetchAPI = () => {
       console.error("Fetch error:", error);
       throw error;
     }
-  };
+  }, []);
 
   return fetchAPI;
 };

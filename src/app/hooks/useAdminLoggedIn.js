@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "react-toastify";
 
 import useFetchAPI from "./useFetch";
@@ -14,28 +14,31 @@ const useGetLoggedInAdmin = () => {
    * @param {*} token
    */
 
-  const getLoggedInAdmin = async (token) => {
-    try {
-      setLoading(true);
-      const response = await fetchAPI(`api/v1/admin/get-logged-in-admin`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  const getLoggedInAdmin = useCallback(
+    async (token) => {
+      try {
+        setLoading(true);
+        const response = await fetchAPI(`api/v1/admin/get-logged-in-admin`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      const responseData = await response.json();
+        const responseData = await response.json();
 
-      setData(responseData);
-    } catch (error) {
-      const networkError = error.message || "Network error";
-      toast.error(networkError);
-      console.error("Network Error:", networkError);
-    } finally {
-      setLoading(false);
-    }
-  };
+        setData(responseData);
+      } catch (error) {
+        const networkError = error.message || "Network error";
+        toast.error(networkError);
+        console.error("Network Error:", networkError);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchAPI]
+  );
 
   return { getLoggedInAdmin, data, loading };
 };
