@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import { Checkbox } from "../ui/checkbox";
 
 export function ReusableTable({
   columns,
@@ -21,6 +22,11 @@ export function ReusableTable({
   emptyMessage = "No items found.",
   hasMore = false,
   hasPrevious = false,
+  enableSelection = false,
+  selectedItems = [],
+  onSelectionChange,
+  selectAll = false,
+  onSelectAll,
 }) {
   // Calculate the range of items being shown
   const itemsPerPage = 20;
@@ -38,6 +44,15 @@ export function ReusableTable({
               <Table className="min-w-full table-auto">
                 <TableHeader className="bg-gray-50 sticky top-0 z-10">
                   <TableRow>
+                    {enableSelection && (
+                      <TableHead className="py-3 px-3 text-sm font-semibold text-gray-700 border-b border-gray-200 w-12">
+                        <Checkbox
+                          checked={selectAll}
+                          onCheckedChange={onSelectAll}
+                          className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                        />
+                      </TableHead>
+                    )}
                     {columns.map((column) => (
                       <TableHead
                         key={column.key}
@@ -52,38 +67,58 @@ export function ReusableTable({
                 </TableHeader>
                 <TableBody>
                   {data?.length > 0 ? (
-                    data?.map((item, index) => (
-                      <TableRow
-                        key={index}
-                        className="hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 transition-colors"
-                        onClick={() => handleRowClick(item)}
-                      >
-                        {columns.map((column) => {
-                          const cellValue = item[column.key]?.toString() || "-";
-                          return (
-                            <TableCell
-                              key={column.key}
-                              className="py-4 px-3 max-w-[200px]"
-                            >
-                              {column.render ? (
-                                column.render(item)
-                              ) : (
-                                <div
-                                  className="truncate text-gray-900 cursor-help"
-                                  title={cellValue}
-                                >
-                                  {cellValue}
-                                </div>
-                              )}
+                    data?.map((item, index) => {
+                      const isSelected = selectedItems.includes(item.id);
+                      return (
+                        <TableRow
+                          key={index}
+                          className="hover:bg-gray-50 cursor-pointer text-sm border-b border-gray-100 transition-colors"
+                          onClick={() => handleRowClick(item)}
+                        >
+                          {enableSelection && (
+                            <TableCell className="py-4 px-3 w-12">
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={(checked) => {
+                                  if (onSelectionChange) {
+                                    onSelectionChange(item.id, checked);
+                                  }
+                                }}
+                                className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                                onClick={(e) => e.stopPropagation()}
+                              />
                             </TableCell>
-                          );
-                        })}
-                      </TableRow>
-                    ))
+                          )}
+                          {columns.map((column) => {
+                            const cellValue =
+                              item[column.key]?.toString() || "-";
+                            return (
+                              <TableCell
+                                key={column.key}
+                                className="py-4 px-3 max-w-[200px]"
+                              >
+                                {column.render ? (
+                                  column.render(item)
+                                ) : (
+                                  <div
+                                    className="truncate text-gray-900 cursor-help"
+                                    title={cellValue}
+                                  >
+                                    {cellValue}
+                                  </div>
+                                )}
+                              </TableCell>
+                            );
+                          })}
+                        </TableRow>
+                      );
+                    })
                   ) : (
                     <TableRow>
                       <TableCell
-                        colSpan={columns.length}
+                        colSpan={
+                          enableSelection ? columns.length + 1 : columns.length
+                        }
                         className="py-8 px-6 text-center text-gray-500"
                       >
                         {emptyMessage}
