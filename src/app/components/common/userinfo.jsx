@@ -129,7 +129,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${user.firstName}_${user.lastName}_profile_picture.jpg`;
+      link.download = `${user.offaNimiId}.jpg`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
