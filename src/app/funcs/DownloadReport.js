@@ -18,6 +18,14 @@ export const downloadCSV = (reportData) => {
           if (value === null || value === undefined) {
             value = ""; // Or handle as you see fit, e.g., 'N/A'
           }
+          // Remove commas from address fields to avoid column breaks
+          if (
+            typeof value === "string" &&
+            typeof key === "string" &&
+            key.toLowerCase().includes("address")
+          ) {
+            value = value.replace(/,/g, "");
+          }
           // Escape any commas within the data
           if (typeof value === "string" && value.includes(",")) {
             value = `"${value.replace(/"/g, '""')}"`; // Escape quotes and wrap in quotes
@@ -98,6 +106,15 @@ export const downloadApprovedUsersCSV = (selectedUsers) => {
           // Handle potential null or undefined values
           if (value === null || value === undefined) {
             value = "";
+          }
+
+          // Remove commas from address fields to avoid column breaks
+          if (
+            typeof value === "string" &&
+            typeof header === "string" &&
+            header.toLowerCase().includes("address")
+          ) {
+            value = value.replace(/,/g, "");
           }
 
           // Escape any commas within the data
