@@ -31,13 +31,10 @@ const ApprovedUsers = () => {
     }
   }, [currentPage, getUsers, limit]);
 
-  // Update users and totalPages whenever new data arrives.
   useEffect(() => {
     if (data) {
       setUsers(data.users);
-      // Since API doesn't provide totalPages, we'll calculate it based on hasMore
-      // If hasMore is true, there's at least one more page
-      // If hasMore is false, this is the last page
+
       const estimatedTotalPages = data.pagination?.hasMore
         ? currentPage + 1
         : currentPage;
@@ -117,12 +114,10 @@ const ApprovedUsers = () => {
     );
     downloadApprovedUsersCSV(selectedUsersData);
 
-    // Clear selection after download
     setSelectedUsers([]);
     setSelectAll(false);
   }, [filteredUsers, selectedUsers]);
 
-  // Memoize columns definition.
   const columns = useMemo(
     () => [
       {

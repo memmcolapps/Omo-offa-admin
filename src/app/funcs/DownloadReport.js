@@ -67,48 +67,44 @@ export const downloadApprovedUsersCSV = (selectedUsers) => {
     "compoundName",
     "offaNimiId",
     "issuedDate",
-    "Religion",
-    "Sex",
+    "religion",
+    "sex",
+    "bloodGroup",
+    "dob",
+    "emergencyContactName",
   ];
 
-  // Generate dummy data for Religion and Sex
-  const religions = ["Christianity", "Islam", "Traditional", "Other"];
-  const sexes = ["Male", "Female"];
-
-  // Create CSV content with the specified headers
   const csvData = [
     headers.join(","), // CSV header
     ...selectedUsers.map((user) => {
-      // Generate random dummy data for Religion and Sex
-      const randomReligion =
-        religions[Math.floor(Math.random() * religions.length)];
-      const randomSex = sexes[Math.floor(Math.random() * sexes.length)];
-
       return headers
         .map((header) => {
           let value;
 
           switch (header) {
-            case "Religion":
-              value = randomReligion;
+            case "dob":
+              value = user.info?.dob || "";
               break;
-            case "Sex":
-              value = randomSex;
+            case "religion":
+              value = user.info?.religion || "";
+              break;
+            case "sex":
+              value = user.info?.sex || "";
+              break;
+            case "bloodGroup":
+              value = user.info?.bloodGroup || "";
               break;
             case "issuedDate":
-              // Use current date as issued date (date of CSV download)
               value = new Date().toISOString().split("T")[0];
               break;
             default:
               value = user[header] || "";
           }
 
-          // Handle potential null or undefined values
           if (value === null || value === undefined) {
             value = "";
           }
 
-          // Remove commas from address fields to avoid column breaks
           if (
             typeof value === "string" &&
             typeof header === "string" &&
@@ -117,7 +113,6 @@ export const downloadApprovedUsersCSV = (selectedUsers) => {
             value = value.replace(/,/g, "");
           }
 
-          // Escape any commas within the data
           if (typeof value === "string" && value.includes(",")) {
             value = `"${value.replace(/"/g, '""')}"`; // Escape quotes and wrap in quotes
           }
