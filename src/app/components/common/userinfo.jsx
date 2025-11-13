@@ -46,9 +46,13 @@ const UserProfileForm = ({ user, showApproveReject }) => {
     physicalChallenges: "",
     email: "",
     phoneNumber: "",
+    secondPhoneNumber: "",
     nin: "",
     occupation: "",
     bankName: "",
+    sex: "",
+    religion: "",
+    bloodGroup: "",
     // Additional info fields
     dob: "",
     placeOfBirth: "",
@@ -151,9 +155,13 @@ const UserProfileForm = ({ user, showApproveReject }) => {
     { label: "NIN", name: "nin" },
     { label: "Genotype", name: "genotype" },
     { label: "Physical Challenges", name: "physicalChallenges" },
+    { label: "Sex", name: "sex" },
+    { label: "Religion", name: "religion" },
+    { label: "Blood Group", name: "bloodGroup" },
 
     // Contact Information
     { label: "Current Phone Number", name: "phoneNumber", type: "tel" },
+    { label: "Second Phone Number", name: "secondPhoneNumber", type: "tel" },
     { label: "Current E-mail Address", name: "email", type: "email" },
     { label: "Emergency Contact Name", name: "emergencyContactName" },
     {
@@ -314,7 +322,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
               Basic Information
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {formFields.slice(0, 8).map(({ label, name, type = "text" }) => (
+              {formFields.slice(0, 11).map(({ label, name, type = "text" }) => (
                 <div key={name} className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
                     {label}
@@ -338,21 +346,23 @@ const UserProfileForm = ({ user, showApproveReject }) => {
               Contact Information
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {formFields.slice(8, 12).map(({ label, name, type = "text" }) => (
-                <div key={name} className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    {label}
-                  </label>
-                  <input
-                    type={type}
-                    name={name}
-                    className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
-                    value={formData[name] || ""}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                  />
-                </div>
-              ))}
+              {formFields
+                .slice(11, 16)
+                .map(({ label, name, type = "text" }) => (
+                  <div key={name} className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      {label}
+                    </label>
+                    <input
+                      type={type}
+                      name={name}
+                      className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                      value={formData[name] || ""}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                ))}
             </div>
           </div>
 
@@ -363,7 +373,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
-                .slice(12, 19)
+                .slice(16, 23)
                 .map(({ label, name, type = "text" }) => (
                   <div key={name} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
@@ -389,7 +399,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
-                .slice(19, 23)
+                .slice(23, 27)
                 .map(({ label, name, type = "text" }) => (
                   <div key={name} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
@@ -415,7 +425,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
-                .slice(23, 27)
+                .slice(27, 31)
                 .map(({ label, name, type = "text" }) => (
                   <div key={name} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
@@ -441,7 +451,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
-                .slice(27, 30)
+                .slice(31, 34)
                 .map(({ label, name, type = "text" }) => (
                   <div key={name} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
@@ -467,7 +477,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
-                .slice(30, 36)
+                .slice(34, 40)
                 .map(({ label, name, type = "text" }) => (
                   <div key={name} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
