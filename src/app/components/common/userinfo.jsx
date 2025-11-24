@@ -101,7 +101,11 @@ const UserProfileForm = ({ user, showApproveReject }) => {
   const handleSaveChanges = async () => {
     try {
       const token = localStorage.getItem("token");
-      await editData(formData, user.offaNimiId, token);
+      // Ensure NIN is not updated — remove it from the payload
+      const payloadToSend = { ...formData };
+      if (Object.prototype.hasOwnProperty.call(payloadToSend, "nin"))
+        delete payloadToSend.nin;
+      await editData(payloadToSend, user.offaNimiId, token);
       setIsEditing(false);
       router.back();
     } catch (error) {
@@ -153,11 +157,31 @@ const UserProfileForm = ({ user, showApproveReject }) => {
     { label: "Date of Birth", name: "dob", type: "date" },
     { label: "Place of Birth", name: "placeOfBirth" },
     { label: "NIN", name: "nin" },
-    { label: "Genotype", name: "genotype" },
+    {
+      label: "Genotype",
+      name: "genotype",
+      type: "select",
+      options: ["AA", "AS", "SS", "AC", "SC", "CC"],
+    },
     { label: "Physical Challenges", name: "physicalChallenges" },
-    { label: "Sex", name: "sex" },
-    { label: "Religion", name: "religion" },
-    { label: "Blood Group", name: "bloodGroup" },
+    {
+      label: "Sex",
+      name: "sex",
+      type: "select",
+      options: ["Male", "Female", "Other"],
+    },
+    {
+      label: "Religion",
+      name: "religion",
+      type: "select",
+      options: ["Christianity", "Islam", "Traditional"],
+    },
+    {
+      label: "Blood Group",
+      name: "bloodGroup",
+      type: "select",
+      options: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+    },
 
     // Contact Information
     { label: "Current Phone Number", name: "phoneNumber", type: "tel" },
@@ -183,8 +207,37 @@ const UserProfileForm = ({ user, showApproveReject }) => {
     { label: "Ward Name", name: "wardName" },
 
     // Employment & Financial
-    { label: "Occupation", name: "occupation" },
-    { label: "Employment Status", name: "employmentStatus" },
+    {
+      label: "Occupation",
+      name: "occupation",
+      type: "select",
+      options: [
+        "Unemployed",
+        "Student",
+        "Civil Servant",
+        "Self-Employed",
+        "Trader",
+        "Farmer",
+        "Teacher",
+        "Healthcare Worker",
+        "Engineer",
+        "Other",
+      ],
+    },
+    {
+      label: "Employment Status",
+      name: "employmentStatus",
+      type: "select",
+      options: [
+        "Employed",
+        "Self-employed",
+        "Part-time",
+        "Contract",
+        "Unemployed",
+        "Student",
+        "Retired",
+      ],
+    },
     { label: "Bank Name", name: "bankName" },
     {
       label: "Number of Current Dependants",
@@ -193,7 +246,19 @@ const UserProfileForm = ({ user, showApproveReject }) => {
     },
 
     // Indigene Information
-    { label: "How are you an Offa Indigene?", name: "indigeneByWho" },
+    {
+      label: "How are you an Offa Indigene?",
+      name: "indigeneByWho",
+      type: "select",
+      options: [
+        "By Father and Mother",
+        "By Father only",
+        "By Mother only",
+        "By Adoption",
+        "By Residence",
+        "By Marriage",
+      ],
+    },
     { label: "Adopted Parent Name", name: "adoptedParentName" },
     { label: "Adopted Parent Compound", name: "adoptedParentCompound" },
     { label: "Adopted Parent Ward", name: "adoptedParentWard" },
@@ -322,21 +387,47 @@ const UserProfileForm = ({ user, showApproveReject }) => {
               Basic Information
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {formFields.slice(0, 11).map(({ label, name, type = "text" }) => (
-                <div key={name} className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    {label}
-                  </label>
-                  <input
-                    type={type}
-                    name={name}
-                    className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
-                    value={formData[name] || ""}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                  />
-                </div>
-              ))}
+              {formFields
+                .slice(0, 11)
+                .map(({ label, name, type = "text", options }) => (
+                  <div key={name} className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      {label}
+                    </label>
+                    {type === "select" ? (
+                      <select
+                        name={name}
+                        className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                        value={formData[name] || ""}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || name === "nin"}
+                        title={
+                          name === "nin" ? "NIN cannot be edited" : undefined
+                        }
+                      >
+                        <option value="">Select an option</option>
+                        {(options || []).map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type={type}
+                        name={name}
+                        className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                        value={formData[name] || ""}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || name === "nin"}
+                        readOnly={name === "nin"}
+                        title={
+                          name === "nin" ? "NIN cannot be edited" : undefined
+                        }
+                      />
+                    )}
+                  </div>
+                ))}
             </div>
           </div>
 
@@ -348,19 +439,43 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
                 .slice(11, 16)
-                .map(({ label, name, type = "text" }) => (
+                .map(({ label, name, type = "text", options }) => (
                   <div key={name} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
                       {label}
                     </label>
-                    <input
-                      type={type}
-                      name={name}
-                      className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
-                      value={formData[name] || ""}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                    />
+                    {type === "select" ? (
+                      <select
+                        name={name}
+                        className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                        value={formData[name] || ""}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || name === "nin"}
+                        title={
+                          name === "nin" ? "NIN cannot be edited" : undefined
+                        }
+                      >
+                        <option value="">Select an option</option>
+                        {(options || []).map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type={type}
+                        name={name}
+                        className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                        value={formData[name] || ""}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || name === "nin"}
+                        readOnly={name === "nin"}
+                        title={
+                          name === "nin" ? "NIN cannot be edited" : undefined
+                        }
+                      />
+                    )}
                   </div>
                 ))}
             </div>
@@ -374,19 +489,43 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
                 .slice(16, 23)
-                .map(({ label, name, type = "text" }) => (
+                .map(({ label, name, type = "text", options }) => (
                   <div key={name} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
                       {label}
                     </label>
-                    <input
-                      type={type}
-                      name={name}
-                      className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
-                      value={formData[name] || ""}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                    />
+                    {type === "select" ? (
+                      <select
+                        name={name}
+                        className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                        value={formData[name] || ""}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || name === "nin"}
+                        title={
+                          name === "nin" ? "NIN cannot be edited" : undefined
+                        }
+                      >
+                        <option value="">Select an option</option>
+                        {(options || []).map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type={type}
+                        name={name}
+                        className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                        value={formData[name] || ""}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || name === "nin"}
+                        readOnly={name === "nin"}
+                        title={
+                          name === "nin" ? "NIN cannot be edited" : undefined
+                        }
+                      />
+                    )}
                   </div>
                 ))}
             </div>
@@ -400,19 +539,43 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
                 .slice(23, 27)
-                .map(({ label, name, type = "text" }) => (
+                .map(({ label, name, type = "text", options }) => (
                   <div key={name} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
                       {label}
                     </label>
-                    <input
-                      type={type}
-                      name={name}
-                      className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
-                      value={formData[name] || ""}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                    />
+                    {type === "select" ? (
+                      <select
+                        name={name}
+                        className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                        value={formData[name] || ""}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || name === "nin"}
+                        title={
+                          name === "nin" ? "NIN cannot be edited" : undefined
+                        }
+                      >
+                        <option value="">Select an option</option>
+                        {(options || []).map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type={type}
+                        name={name}
+                        className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                        value={formData[name] || ""}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || name === "nin"}
+                        readOnly={name === "nin"}
+                        title={
+                          name === "nin" ? "NIN cannot be edited" : undefined
+                        }
+                      />
+                    )}
                   </div>
                 ))}
             </div>
@@ -426,19 +589,43 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
                 .slice(27, 31)
-                .map(({ label, name, type = "text" }) => (
+                .map(({ label, name, type = "text", options }) => (
                   <div key={name} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
                       {label}
                     </label>
-                    <input
-                      type={type}
-                      name={name}
-                      className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
-                      value={formData[name] || ""}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                    />
+                    {type === "select" ? (
+                      <select
+                        name={name}
+                        className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                        value={formData[name] || ""}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || name === "nin"}
+                        title={
+                          name === "nin" ? "NIN cannot be edited" : undefined
+                        }
+                      >
+                        <option value="">Select an option</option>
+                        {(options || []).map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type={type}
+                        name={name}
+                        className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                        value={formData[name] || ""}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || name === "nin"}
+                        readOnly={name === "nin"}
+                        title={
+                          name === "nin" ? "NIN cannot be edited" : undefined
+                        }
+                      />
+                    )}
                   </div>
                 ))}
             </div>
@@ -452,19 +639,43 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
                 .slice(31, 34)
-                .map(({ label, name, type = "text" }) => (
+                .map(({ label, name, type = "text", options }) => (
                   <div key={name} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
                       {label}
                     </label>
-                    <input
-                      type={type}
-                      name={name}
-                      className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
-                      value={formData[name] || ""}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                    />
+                    {type === "select" ? (
+                      <select
+                        name={name}
+                        className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                        value={formData[name] || ""}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || name === "nin"}
+                        title={
+                          name === "nin" ? "NIN cannot be edited" : undefined
+                        }
+                      >
+                        <option value="">Select an option</option>
+                        {(options || []).map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type={type}
+                        name={name}
+                        className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                        value={formData[name] || ""}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || name === "nin"}
+                        readOnly={name === "nin"}
+                        title={
+                          name === "nin" ? "NIN cannot be edited" : undefined
+                        }
+                      />
+                    )}
                   </div>
                 ))}
             </div>
@@ -489,7 +700,11 @@ const UserProfileForm = ({ user, showApproveReject }) => {
                       className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
                       value={formData[name] || ""}
                       onChange={handleInputChange}
-                      disabled={!isEditing}
+                      disabled={!isEditing || name === "nin"}
+                      readOnly={name === "nin"}
+                      title={
+                        name === "nin" ? "NIN cannot be edited" : undefined
+                      }
                     />
                   </div>
                 ))}
