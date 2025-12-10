@@ -9,7 +9,10 @@ import useGetUsers from "../hooks/useGetUsers";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { ReusableTable } from "../components/common/table";
-import { downloadApprovedUsersCSV } from "../funcs/DownloadReport";
+import {
+  downloadApprovedUsersCSV,
+  downloadForBankExcel,
+} from "../funcs/DownloadReport";
 
 const ApprovedUsers = () => {
   const { getUsers, data, loading } = useGetUsers();
@@ -107,6 +110,17 @@ const ApprovedUsers = () => {
     [filteredUsers]
   );
 
+  // Handle Excel download
+  const handleDownloadExcel = useCallback(() => {
+    const selectedUsersData = filteredUsers.filter((user) =>
+      selectedUsers.includes(user.id)
+    );
+    downloadForBankExcel(selectedUsersData);
+
+    setSelectedUsers([]);
+    setSelectAll(false);
+  }, [filteredUsers, selectedUsers]);
+
   // Handle CSV download
   const handleDownloadCSV = useCallback(() => {
     const selectedUsersData = filteredUsers.filter((user) =>
@@ -194,6 +208,23 @@ const ApprovedUsers = () => {
                 {selectedUsers.length === 0
                   ? "Download CSV"
                   : `Download CSV (${selectedUsers.length} selected)`}
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleDownloadExcel}
+                disabled={selectedUsers.length === 0}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                title={
+                  selectedUsers.length === 0
+                    ? "Select users to download"
+                    : `Download ${selectedUsers.length} selected users`
+                }
+              >
+                <Download className="w-4 h-4" />
+                {selectedUsers.length === 0
+                  ? "Download Excel"
+                  : `Download Excel (${selectedUsers.length} selected)`}
               </Button>
             </div>
           </div>
