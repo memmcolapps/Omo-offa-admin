@@ -74,6 +74,21 @@ const PendingUsers = () => {
       { key: "wardName", header: "Ward Name" },
       { key: "compoundName", header: "Compound Name" },
       { key: "phoneNumber", header: "Phone Number" },
+      {
+        key: "fingerprintCaptured",
+        header: "Fingerprint",
+        render: (user) => (
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-medium ${
+              user.fingerprintCaptured
+                ? "bg-green-100 text-green-800"
+                : "bg-yellow-100 text-yellow-800"
+            }`}
+          >
+            {user.fingerprintCaptured ? "Captured" : "Not Captured"}
+          </span>
+        ),
+      },
       { key: "createdAt", header: "Date Added" },
     ],
     []

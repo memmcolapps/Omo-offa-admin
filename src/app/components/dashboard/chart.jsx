@@ -39,6 +39,11 @@ export function DashboardChart({ data }) {
       totalNumbers: data.deliveredId,
       fill: "var(--color-deliveredId)",
     },
+    {
+      item: "fingerprintsCaptured",
+      totalNumbers: data.fingerprintsCaptured,
+      fill: "var(--color-fingerprintsCaptured)",
+    },
   ];
   const chartConfig = {
     totalNumbers: {
@@ -67,6 +72,10 @@ export function DashboardChart({ data }) {
     deliveredId: {
       label: "Delivered ID",
       color: "hsl(var(--chart-6))",
+    },
+    fingerprintsCaptured: {
+      label: "Fingerprints Captured",
+      color: "hsl(var(--chart-7))",
     },
   };
   return (

@@ -182,6 +182,11 @@ const UserProfileForm = ({ user, showApproveReject }) => {
       type: "select",
       options: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
     },
+    {
+      label: "Fingerprint Captured",
+      name: "fingerprintCaptured",
+      type: "badge",
+    },
 
     // Contact Information
     { label: "Current Phone Number", name: "phoneNumber", type: "tel" },
@@ -388,13 +393,25 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
-                .slice(0, 11)
+                .slice(0, 12)
                 .map(({ label, name, type = "text", options }) => (
                   <div key={name} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
                       {label}
                     </label>
-                    {type === "select" ? (
+                    {type === "badge" ? (
+                      <div className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200">
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            user?.fingerprintCaptured
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {user?.fingerprintCaptured ? "Captured" : "Not Captured"}
+                        </span>
+                      </div>
+                    ) : type === "select" ? (
                       <select
                         name={name}
                         className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
