@@ -12,6 +12,7 @@ import {
   Logs,
   FolderKanban,
   ChartLine,
+  Package,
 } from "lucide-react";
 
 import { useUser } from "../../context/UserContext";
@@ -29,9 +30,16 @@ const MENU_ITEMS = [
   {
     name: "Dashboard",
     href: "/Dashboard",
-    icon: <LayoutDashboard size={24} className="shrink-0" />,
+    icon: <LayoutDashboard size={24} className="shrink-0" />, 
     userType: ["superadmin", "operator"],
     permissions: { user: { view: true } },
+  },
+  {
+    name: "Compounds",
+    href: "/Compounds",
+    icon: <Package size={24} className="shrink-0" />, 
+    userType: ["superadmin", "operator"],
+    permissions: { compounds: { view: true } },
   },
   {
     name: "Approved Users",
