@@ -1,6 +1,7 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Pencil, Trash2, Plus } from "lucide-react";
+import useCompounds from "../hooks/useCompounds";
 
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -20,16 +21,18 @@ import {
   CardDescription,
 } from "../components/ui/card";
 
-const initialCompounds = [
-  {
-    id: "c1",
-    name: "Water",
-  },
-  { id: "c2", name: "Ethanol" },
-];
-
 export default function CompoundsPage() {
-  const [compounds, setCompounds] = useState(initialCompounds);
+  const {
+    compounds,
+    addCompound,
+    updateCompound,
+    deleteCompound,
+    token,
+    setToken,
+    loading,
+    error,
+    loadCompounds,
+  } = useCompounds();
   const [form, setForm] = useState({ id: "", name: "" });
   const [isEditing, setIsEditing] = useState(false);
   // UI helpers: search and pagination
@@ -42,13 +45,9 @@ export default function CompoundsPage() {
     setIsEditing(false);
   };
 
-  const addCompound = () => {
+  const handleAdd = async () => {
     if (!form.name.trim()) return;
-    const newItem = {
-      id: Date.now().toString(),
-      name: form.name.trim(),
-    };
-    setCompounds((prev) => [...prev, newItem]);
+    await addCompound?.(form.name.trim());
     resetForm();
   };
 
@@ -57,16 +56,14 @@ export default function CompoundsPage() {
     setIsEditing(true);
   };
 
-  const updateCompound = () => {
+  const handleUpdate = async () => {
     if (!form.id) return;
-    setCompounds((prev) =>
-      prev.map((c) => (c.id === form.id ? { ...c, name: form.name } : c)),
-    );
+    await updateCompound?.(form.id, form.name);
     resetForm();
   };
 
-  const deleteCompound = (id) => {
-    setCompounds((prev) => prev.filter((c) => c.id !== id));
+  const handleDelete = async (id) => {
+    await deleteCompound?.(id);
   };
 
   const canSubmit = form.name.trim();
@@ -89,6 +86,7 @@ export default function CompoundsPage() {
   );
 
   useEffect(() => {
+    loadCompounds();
     if (currentPage > totalPages) setCurrentPage(totalPages);
   }, [totalPages, currentPage]);
 
@@ -110,7 +108,7 @@ export default function CompoundsPage() {
           <div className="mt-4 flex items-center gap-2">
             <Button
               className="flex items-center"
-              onClick={isEditing ? updateCompound : addCompound}
+              onClick={isEditing ? handleUpdate : handleAdd}
               disabled={!canSubmit && !isEditing}
             >
               {isEditing ? (
@@ -172,7 +170,7 @@ export default function CompoundsPage() {
                       <Button
                         variant="destructive"
                         size="sm"
-                        onClick={() => deleteCompound(c.id)}
+                        onClick={() => handleDelete(c.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
