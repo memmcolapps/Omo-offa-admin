@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { toast } from "react-toastify";
 
 import useFetchAPI from "./useFetch";
@@ -12,7 +12,7 @@ const useCompounds = () => {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-  const loadCompounds = async () => {
+  const loadCompounds = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetchAPI("api/v1/admin/compounds", {});
@@ -27,7 +27,7 @@ const useCompounds = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [fetchAPI]);
 
   const addCompound = async (name) => {
     try {

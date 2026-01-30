@@ -8,14 +8,16 @@ import { Download } from "lucide-react";
 
 import MaxContainer from "./maxcontainer";
 import useChangeUserStatus from "../../hooks/useChangeUserStatus";
-import useEditUserData from "../../hooks/useEditUserData"; // Fixed typo in import name
+import useEditUserData from "../../hooks/useEditUserData";
+import useCompounds from "../../hooks/useCompounds";
 import { useUser } from "../../context/UserContext";
 
 const UserProfileForm = ({ user, showApproveReject }) => {
   const router = useRouter();
   const { changeStatus, loading } = useChangeUserStatus();
-  const { editData } = useEditUserData(); // Fixed hook name
+  const { editData } = useEditUserData();
   const { user: admin } = useUser();
+  const { compounds, loadCompounds } = useCompounds();
 
   // Consolidated state management
   const [isEditing, setIsEditing] = useState(false);
@@ -24,6 +26,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
   const [status, setStatus] = useState(user?.status);
 
   const [formData, setFormData] = useState({
+    title: "",
     lastName: "",
     firstName: "",
     middleName: "",
@@ -53,6 +56,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
     sex: "",
     religion: "",
     bloodGroup: "",
+    maritalStatus: "",
     // Additional info fields
     dob: "",
     placeOfBirth: "",
@@ -65,21 +69,44 @@ const UserProfileForm = ({ user, showApproveReject }) => {
     mothersCompound: "",
     mothersName: "",
     mothersPlaceOfBirth: "",
+    // User status and additional fields
+    isDeceased: false,
+    idPayment: false,
+    deliveryStatus: "",
+    parentNin: "",
+    signature: "",
+    verificationStatus: "",
+    fingerprintCaptured: false,
   });
 
-  // Initialize form data from user prop
+  // Initialize form data from user prop - includes ALL available fields except excluded ones
   useEffect(() => {
     if (user) {
+      // Combine user data and nested info object into a single object
+      const allUserData = {
+        ...user,
+        ...(user.info || {}),
+      };
+
+      // Filter out offaNimiId from editable fields - it will be displayed separately
+      // Also filter out fields that should not be displayed (including all Legend fields)
+      const {
+        offaNimiId,
+        id,
+        userId,
+        profilePicUrl,
+        profilePicture,
+        profilePicBase64,
+        password,
+        ninData,
+        cityLagend,
+        socioProCode,
+        ...editableData
+      } = allUserData;
+
       setFormData((prevData) => ({
         ...prevData,
-        ...Object.fromEntries(
-          Object.entries(user).filter(([key]) => key in prevData)
-        ),
-        // Handle nested info object
-        ...(user.info &&
-          Object.fromEntries(
-            Object.entries(user.info).filter(([key]) => key in prevData)
-          )),
+        ...editableData,
       }));
     }
   }, [user]);
@@ -93,6 +120,12 @@ const UserProfileForm = ({ user, showApproveReject }) => {
     }
   }, [admin]);
 
+  // Load compounds on component mount - only run once
+  useEffect(() => {
+    loadCompounds();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -101,10 +134,44 @@ const UserProfileForm = ({ user, showApproveReject }) => {
   const handleSaveChanges = async () => {
     try {
       const token = localStorage.getItem("token");
-      // Ensure NIN is not updated — remove it from the payload
-      const payloadToSend = { ...formData };
-      if (Object.prototype.hasOwnProperty.call(payloadToSend, "nin"))
-        delete payloadToSend.nin;
+
+      // Define which fields belong to userInfo (from UserInfo model)
+      const userInfoFields = [
+        "dob",
+        "placeOfBirth",
+        "fathersName",
+        "fathersPlaceOfBirth",
+        "mothersName",
+        "mothersPlaceOfBirth",
+        "fathersPhoneNumber",
+        "mothersPhoneNumber",
+        "mothersFatherName",
+        "mothersHomeTown",
+        "mothersCompound",
+        "religion",
+        "sex",
+        "secondPhoneNumber",
+        "bloodGroup",
+      ];
+
+      // Separate user data and userInfo data
+      const userData = {};
+      const infoData = {};
+
+      Object.entries(formData).forEach(([key, value]) => {
+        if (userInfoFields.includes(key)) {
+          infoData[key] = value;
+        } else if (key !== "offaNimiId") {
+          userData[key] = value;
+        }
+      });
+
+      // Construct payload with nested info object
+      const payloadToSend = {
+        ...userData,
+        info: infoData,
+      };
+
       await editData(payloadToSend, user.offaNimiId, token);
       setIsEditing(false);
       router.back();
@@ -151,6 +218,12 @@ const UserProfileForm = ({ user, showApproveReject }) => {
 
   const formFields = [
     // Basic Information
+    {
+      label: "Title",
+      name: "title",
+      type: "select",
+      options: ["MR", "MRS", "MISS", "DR", "PROF", "ENGR", "CHIEF"],
+    },
     { label: "First Name", name: "firstName" },
     { label: "Last Name", name: "lastName" },
     { label: "Middle Name", name: "middleName" },
@@ -174,13 +247,19 @@ const UserProfileForm = ({ user, showApproveReject }) => {
       label: "Religion",
       name: "religion",
       type: "select",
-      options: ["Christianity", "Islam", "Traditional"],
+      options: ["Islam", "Christianity", "Traditional Religion"],
     },
     {
       label: "Blood Group",
       name: "bloodGroup",
       type: "select",
       options: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+    },
+    {
+      label: "Marital Status",
+      name: "maritalStatus",
+      type: "select",
+      options: ["Single", "Married", "Widowed", "Divorced"],
     },
     {
       label: "Fingerprint Captured",
@@ -208,8 +287,13 @@ const UserProfileForm = ({ user, showApproveReject }) => {
       name: "localGovernmentAreaOfResidence",
     },
     { label: "Address of Residence", name: "addressOfResidence" },
-    { label: "Compound Name", name: "compoundName" },
-    { label: "Ward Name", name: "wardName" },
+    { label: "Compound Name", name: "compoundName", type: "compoundSelect" },
+    {
+      label: "Ward Name",
+      name: "wardName",
+      type: "select",
+      options: ["Asalofa", "Balogun", "Essa", "Ojomu", "Shawo"],
+    },
 
     // Employment & Financial
     {
@@ -280,6 +364,32 @@ const UserProfileForm = ({ user, showApproveReject }) => {
     { label: "Mother's Father Name", name: "mothersFatherName" },
     { label: "Mother's Home Town", name: "mothersHomeTown" },
     { label: "Mother's Compound", name: "mothersCompound" },
+
+    // Status & Verification
+    {
+      label: "Deceased",
+      name: "isDeceased",
+      type: "select",
+      options: ["true", "false"],
+    },
+    {
+      label: "ID Payment",
+      name: "idPayment",
+      type: "view",
+    },
+    {
+      label: "Delivery Status",
+      name: "deliveryStatus",
+      type: "view",
+    },
+    {
+      label: "Verification Status",
+      name: "verificationStatus",
+      type: "view",
+    },
+
+    // Additional Fields
+    { label: "Parent NIN", name: "parentNin" },
   ];
 
   if (!user) {
@@ -338,6 +448,16 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             </div>
             <div>
               <h2 className="text-2xl font-semibold mb-4">User Profile</h2>
+              {user?.offaNimiId && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    OffaNimi ID
+                  </label>
+                  <div className="w-full max-w-xs p-3 rounded-lg bg-gray-100 border border-gray-200 text-gray-800 font-medium">
+                    {user.offaNimiId}
+                  </div>
+                </div>
+              )}
               <div className="flex flex-wrap gap-4">
                 {user?.profilePicUrl && (
                   <button
@@ -393,7 +513,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
-                .slice(0, 12)
+                .slice(0, 14)
                 .map(({ label, name, type = "text", options }) => (
                   <div key={name} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
@@ -408,7 +528,9 @@ const UserProfileForm = ({ user, showApproveReject }) => {
                               : "bg-yellow-100 text-yellow-800"
                           }`}
                         >
-                          {user?.fingerprintCaptured ? "Captured" : "Not Captured"}
+                          {user?.fingerprintCaptured
+                            ? "Captured"
+                            : "Not Captured"}
                         </span>
                       </div>
                     ) : type === "select" ? (
@@ -417,9 +539,11 @@ const UserProfileForm = ({ user, showApproveReject }) => {
                         className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
                         value={formData[name] || ""}
                         onChange={handleInputChange}
-                        disabled={!isEditing || name === "nin"}
+                        disabled={!isEditing || name === "offaNimiId"}
                         title={
-                          name === "nin" ? "NIN cannot be edited" : undefined
+                          name === "offaNimiId"
+                            ? "OffaNimi ID cannot be edited"
+                            : undefined
                         }
                       >
                         <option value="">Select an option</option>
@@ -436,10 +560,12 @@ const UserProfileForm = ({ user, showApproveReject }) => {
                         className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
                         value={formData[name] || ""}
                         onChange={handleInputChange}
-                        disabled={!isEditing || name === "nin"}
-                        readOnly={name === "nin"}
+                        disabled={!isEditing || name === "offaNimiId"}
+                        readOnly={name === "offaNimiId"}
                         title={
-                          name === "nin" ? "NIN cannot be edited" : undefined
+                          name === "offaNimiId"
+                            ? "OffaNimi ID cannot be edited"
+                            : undefined
                         }
                       />
                     )}
@@ -455,7 +581,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
-                .slice(11, 16)
+                .slice(14, 19)
                 .map(({ label, name, type = "text", options }) => (
                   <div key={name} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
@@ -467,9 +593,11 @@ const UserProfileForm = ({ user, showApproveReject }) => {
                         className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
                         value={formData[name] || ""}
                         onChange={handleInputChange}
-                        disabled={!isEditing || name === "nin"}
+                        disabled={!isEditing || name === "offaNimiId"}
                         title={
-                          name === "nin" ? "NIN cannot be edited" : undefined
+                          name === "offaNimiId"
+                            ? "OffaNimi ID cannot be edited"
+                            : undefined
                         }
                       >
                         <option value="">Select an option</option>
@@ -486,10 +614,12 @@ const UserProfileForm = ({ user, showApproveReject }) => {
                         className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
                         value={formData[name] || ""}
                         onChange={handleInputChange}
-                        disabled={!isEditing || name === "nin"}
-                        readOnly={name === "nin"}
+                        disabled={!isEditing || name === "offaNimiId"}
+                        readOnly={name === "offaNimiId"}
                         title={
-                          name === "nin" ? "NIN cannot be edited" : undefined
+                          name === "offaNimiId"
+                            ? "OffaNimi ID cannot be edited"
+                            : undefined
                         }
                       />
                     )}
@@ -505,7 +635,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
-                .slice(16, 23)
+                .slice(19, 26)
                 .map(({ label, name, type = "text", options }) => (
                   <div key={name} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
@@ -517,15 +647,37 @@ const UserProfileForm = ({ user, showApproveReject }) => {
                         className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
                         value={formData[name] || ""}
                         onChange={handleInputChange}
-                        disabled={!isEditing || name === "nin"}
+                        disabled={!isEditing || name === "offaNimiId"}
                         title={
-                          name === "nin" ? "NIN cannot be edited" : undefined
+                          name === "offaNimiId"
+                            ? "OffaNimi ID cannot be edited"
+                            : undefined
                         }
                       >
                         <option value="">Select an option</option>
                         {(options || []).map((opt) => (
                           <option key={opt} value={opt}>
                             {opt}
+                          </option>
+                        ))}
+                      </select>
+                    ) : type === "compoundSelect" ? (
+                      <select
+                        name={name}
+                        className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                        value={formData[name] || ""}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || name === "offaNimiId"}
+                        title={
+                          name === "offaNimiId"
+                            ? "OffaNimi ID cannot be edited"
+                            : undefined
+                        }
+                      >
+                        <option value="">Select a compound</option>
+                        {compounds.map((compound) => (
+                          <option key={compound.id} value={compound.name}>
+                            {compound.name}
                           </option>
                         ))}
                       </select>
@@ -536,10 +688,12 @@ const UserProfileForm = ({ user, showApproveReject }) => {
                         className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
                         value={formData[name] || ""}
                         onChange={handleInputChange}
-                        disabled={!isEditing || name === "nin"}
-                        readOnly={name === "nin"}
+                        disabled={!isEditing || name === "offaNimiId"}
+                        readOnly={name === "offaNimiId"}
                         title={
-                          name === "nin" ? "NIN cannot be edited" : undefined
+                          name === "offaNimiId"
+                            ? "OffaNimi ID cannot be edited"
+                            : undefined
                         }
                       />
                     )}
@@ -555,7 +709,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
-                .slice(23, 27)
+                .slice(26, 30)
                 .map(({ label, name, type = "text", options }) => (
                   <div key={name} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
@@ -567,9 +721,11 @@ const UserProfileForm = ({ user, showApproveReject }) => {
                         className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
                         value={formData[name] || ""}
                         onChange={handleInputChange}
-                        disabled={!isEditing || name === "nin"}
+                        disabled={!isEditing || name === "offaNimiId"}
                         title={
-                          name === "nin" ? "NIN cannot be edited" : undefined
+                          name === "offaNimiId"
+                            ? "OffaNimi ID cannot be edited"
+                            : undefined
                         }
                       >
                         <option value="">Select an option</option>
@@ -586,10 +742,12 @@ const UserProfileForm = ({ user, showApproveReject }) => {
                         className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
                         value={formData[name] || ""}
                         onChange={handleInputChange}
-                        disabled={!isEditing || name === "nin"}
-                        readOnly={name === "nin"}
+                        disabled={!isEditing || name === "offaNimiId"}
+                        readOnly={name === "offaNimiId"}
                         title={
-                          name === "nin" ? "NIN cannot be edited" : undefined
+                          name === "offaNimiId"
+                            ? "OffaNimi ID cannot be edited"
+                            : undefined
                         }
                       />
                     )}
@@ -605,7 +763,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
-                .slice(27, 31)
+                .slice(30, 34)
                 .map(({ label, name, type = "text", options }) => (
                   <div key={name} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
@@ -617,9 +775,11 @@ const UserProfileForm = ({ user, showApproveReject }) => {
                         className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
                         value={formData[name] || ""}
                         onChange={handleInputChange}
-                        disabled={!isEditing || name === "nin"}
+                        disabled={!isEditing || name === "offaNimiId"}
                         title={
-                          name === "nin" ? "NIN cannot be edited" : undefined
+                          name === "offaNimiId"
+                            ? "OffaNimi ID cannot be edited"
+                            : undefined
                         }
                       >
                         <option value="">Select an option</option>
@@ -636,10 +796,12 @@ const UserProfileForm = ({ user, showApproveReject }) => {
                         className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
                         value={formData[name] || ""}
                         onChange={handleInputChange}
-                        disabled={!isEditing || name === "nin"}
-                        readOnly={name === "nin"}
+                        disabled={!isEditing || name === "offaNimiId"}
+                        readOnly={name === "offaNimiId"}
                         title={
-                          name === "nin" ? "NIN cannot be edited" : undefined
+                          name === "offaNimiId"
+                            ? "OffaNimi ID cannot be edited"
+                            : undefined
                         }
                       />
                     )}
@@ -655,7 +817,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
-                .slice(31, 34)
+                .slice(34, 37)
                 .map(({ label, name, type = "text", options }) => (
                   <div key={name} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
@@ -667,9 +829,11 @@ const UserProfileForm = ({ user, showApproveReject }) => {
                         className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
                         value={formData[name] || ""}
                         onChange={handleInputChange}
-                        disabled={!isEditing || name === "nin"}
+                        disabled={!isEditing || name === "offaNimiId"}
                         title={
-                          name === "nin" ? "NIN cannot be edited" : undefined
+                          name === "offaNimiId"
+                            ? "OffaNimi ID cannot be edited"
+                            : undefined
                         }
                       >
                         <option value="">Select an option</option>
@@ -686,10 +850,12 @@ const UserProfileForm = ({ user, showApproveReject }) => {
                         className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
                         value={formData[name] || ""}
                         onChange={handleInputChange}
-                        disabled={!isEditing || name === "nin"}
-                        readOnly={name === "nin"}
+                        disabled={!isEditing || name === "offaNimiId"}
+                        readOnly={name === "offaNimiId"}
                         title={
-                          name === "nin" ? "NIN cannot be edited" : undefined
+                          name === "offaNimiId"
+                            ? "OffaNimi ID cannot be edited"
+                            : undefined
                         }
                       />
                     )}
@@ -705,7 +871,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {formFields
-                .slice(34, 40)
+                .slice(37, 43)
                 .map(({ label, name, type = "text" }) => (
                   <div key={name} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
@@ -717,16 +883,174 @@ const UserProfileForm = ({ user, showApproveReject }) => {
                       className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
                       value={formData[name] || ""}
                       onChange={handleInputChange}
-                      disabled={!isEditing || name === "nin"}
-                      readOnly={name === "nin"}
+                      disabled={!isEditing || name === "offaNimiId"}
+                      readOnly={name === "offaNimiId"}
                       title={
-                        name === "nin" ? "NIN cannot be edited" : undefined
+                        name === "offaNimiId"
+                          ? "OffaNimi ID cannot be edited"
+                          : undefined
                       }
                     />
                   </div>
                 ))}
             </div>
           </div>
+
+          {/* Status & Verification Section */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+              Status & Verification
+            </h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {formFields
+                .slice(43, 47)
+                .map(({ label, name, type = "text", options }) => (
+                  <div key={name} className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      {label}
+                    </label>
+                    {type === "select" ? (
+                      <select
+                        name={name}
+                        className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                        value={formData[name] || ""}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || name === "offaNimiId"}
+                        title={
+                          name === "offaNimiId"
+                            ? "OffaNimi ID cannot be edited"
+                            : undefined
+                        }
+                      >
+                        <option value="">Select an option</option>
+                        {(options || []).map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt === "true"
+                              ? "Yes"
+                              : opt === "false"
+                                ? "No"
+                                : opt}
+                          </option>
+                        ))}
+                      </select>
+                    ) : type === "view" ? (
+                      <div className="w-full p-3 rounded-lg bg-gray-100 border border-gray-200 text-gray-800 font-medium">
+                        {name === "idPayment"
+                          ? formData[name]
+                            ? "Yes"
+                            : "No"
+                          : formData[name] || "N/A"}
+                      </div>
+                    ) : (
+                      <input
+                        type={type}
+                        name={name}
+                        className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                        value={formData[name] || ""}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || name === "offaNimiId"}
+                        readOnly={name === "offaNimiId"}
+                        title={
+                          name === "offaNimiId"
+                            ? "OffaNimi ID cannot be edited"
+                            : undefined
+                        }
+                      />
+                    )}
+                  </div>
+                ))}
+            </div>
+          </div>
+
+          {/* Additional Fields Section */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+              Additional Fields
+            </h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {formFields
+                .slice(47, 49)
+                .map(({ label, name, type = "text" }) => (
+                  <div key={name} className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      {label}
+                    </label>
+                    <input
+                      type={type}
+                      name={name}
+                      className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                      value={formData[name] || ""}
+                      onChange={handleInputChange}
+                      disabled={!isEditing || name === "offaNimiId"}
+                      readOnly={name === "offaNimiId"}
+                      title={
+                        name === "offaNimiId"
+                          ? "OffaNimi ID cannot be edited"
+                          : undefined
+                      }
+                    />
+                  </div>
+                ))}
+            </div>
+          </div>
+
+          {/* Additional Information Section - Dynamic fields not in predefined sections */}
+          {(() => {
+            const definedFieldNames = new Set(formFields.map((f) => f.name));
+            const excludedFields = new Set([
+              "offaNimiId",
+              "id",
+              "userId",
+              "profilePicUrl",
+              "profilePicture",
+              "profilePicBase64",
+              "password",
+              "ninData",
+              "cityLagend",
+              "socioProCode",
+              "status",
+              "createdAt",
+              "updatedAt",
+              "info",
+            ]);
+
+            const additionalFields = Object.entries(formData).filter(
+              ([key, value]) =>
+                !definedFieldNames.has(key) &&
+                !excludedFields.has(key) &&
+                !key.endsWith("Legend") &&
+                value !== "" &&
+                value !== null &&
+                value !== undefined,
+            );
+
+            if (additionalFields.length === 0) return null;
+
+            return (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+                  Additional Information
+                </h3>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {additionalFields.map(([key, value]) => (
+                    <div key={key} className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 capitalize">
+                        {key.replace(/([A-Z])/g, " $1").trim()}
+                      </label>
+                      <input
+                        type="text"
+                        name={key}
+                        className="w-full p-3 rounded-lg bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                        value={formData[key] || ""}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </MaxContainer>
