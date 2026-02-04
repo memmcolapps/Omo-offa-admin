@@ -39,7 +39,7 @@ const MENU_ITEMS = [
     href: "/Compounds",
     icon: <Package size={24} className="shrink-0" />, 
     userType: ["superadmin", "operator"],
-    permissions: { compounds: { view: false } },
+    // permissions: { compounds: { view: false } },
   },
   {
     name: "Approved Users",
