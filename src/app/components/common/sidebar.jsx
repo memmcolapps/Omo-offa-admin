@@ -39,7 +39,7 @@ const MENU_ITEMS = [
     href: "/Compounds",
     icon: <Package size={24} className="shrink-0" />, 
     userType: ["superadmin", "operator"],
-    // permissions: { compounds: { view: false } },
+    permissions: { compounds: { view: true } },
   },
   {
     name: "Approved Users",
@@ -123,7 +123,7 @@ const checkPermission = (user, item) => {
   return item.permissions
     ? Object.entries(item.permissions).some(
         ([category, requirements]) =>
-          user.permissions?.[category]?.view === true
+          (user.permissions?.[category]?.view || false) === true
       )
     : false;
 };

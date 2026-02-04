@@ -16,7 +16,11 @@ export function EditPermissionDialog({ isOpen, onClose, operator, onSave }) {
 
   useEffect(() => {
     if (operator) {
-      setPermissions(operator.permissions || {});
+      const completePermissions = {
+        ...operator.permissions,
+        compounds: { view: false },
+      };
+      setPermissions(completePermissions);
     }
   }, [operator]);
 

@@ -33,6 +33,7 @@ const INITIAL_PERMISSIONS = {
   audit: { view: false },
   user: { view: false, edit: false, approve: false },
   reports: { generate: false, view: false },
+  compounds: { view: false },
 };
 
 export default function AdminManagement() {
