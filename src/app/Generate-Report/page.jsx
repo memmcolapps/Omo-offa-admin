@@ -41,17 +41,30 @@ const filterFields = [
     label: "To",
     type: "date",
   },
+
   {
     id: "ward",
     label: "Ward",
     type: "select",
     options: [
-      "OJOMU WARD",
-      "EESA WARD",
-      "BALOGUN WARD",
-      "SAAWO WARD",
-      "OTHERS",
+      "Asalofa",
+      "Balogun",
+      "Essa",
+      "Ojomu",
+      "Shawo",
     ],
+  },
+  {
+    id: "title",
+    label: "Title",
+    type: "select",
+    options: ["MR", "MRS", "MISS", "DR", "PROF", "ENGR", "CHIEF"],
+  },
+  {
+    id: "maritalStatus",
+    label: "Marital Status",
+    type: "select",
+    options: ["Single", "Married", "Widowed", "Divorced"],
   },
   {
     id: "verificationStatus",

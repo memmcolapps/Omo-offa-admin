@@ -30,14 +30,14 @@ const MENU_ITEMS = [
   {
     name: "Dashboard",
     href: "/Dashboard",
-    icon: <LayoutDashboard size={24} className="shrink-0" />, 
+    icon: <LayoutDashboard size={24} className="shrink-0" />,
     userType: ["superadmin", "operator"],
     permissions: { user: { view: true } },
   },
   {
     name: "Compounds",
     href: "/Compounds",
-    icon: <Package size={24} className="shrink-0" />, 
+    icon: <Package size={24} className="shrink-0" />,
     userType: ["superadmin", "operator"],
     permissions: { compounds: { view: true } },
   },
@@ -123,7 +123,7 @@ const checkPermission = (user, item) => {
   return item.permissions
     ? Object.entries(item.permissions).some(
         ([category, requirements]) =>
-          (user.permissions?.[category]?.view || false) === true
+          (user.permissions?.[category]?.view || false) === true,
       )
     : false;
 };
@@ -134,7 +134,7 @@ export function CustomSidebar() {
 
   const authorizedMenuItems = useMemo(
     () => MENU_ITEMS.filter((item) => checkPermission(user, item)),
-    [user]
+    [user],
   );
 
   if (loading) {
