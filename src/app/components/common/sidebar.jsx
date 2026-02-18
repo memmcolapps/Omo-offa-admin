@@ -40,6 +40,7 @@ const MENU_ITEMS = [
     href: "/Bulk-SMS",
     icon: <MessageSquare size={24} className="shrink-0" />,
     userType: ["superadmin", "operator"],
+    permissions: { user: { view: true } },
   },
   {
     name: "Compounds",
