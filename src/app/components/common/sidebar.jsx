@@ -13,6 +13,7 @@ import {
   FolderKanban,
   ChartLine,
   Package,
+  MessageSquare,
 } from "lucide-react";
 
 import { useUser } from "../../context/UserContext";
@@ -33,6 +34,12 @@ const MENU_ITEMS = [
     icon: <LayoutDashboard size={24} className="shrink-0" />,
     userType: ["superadmin", "operator"],
     permissions: { user: { view: true } },
+  },
+  {
+    name: "Bulk SMS",
+    href: "/Bulk-SMS",
+    icon: <MessageSquare size={24} className="shrink-0" />,
+    userType: ["superadmin", "operator"],
   },
   {
     name: "Compounds",
