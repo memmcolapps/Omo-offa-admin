@@ -6,17 +6,66 @@ export const downloadCSV = (reportData) => {
     return;
   }
 
-  const keys = Object.keys(reportData[0]);
+  // Flatten nested objects (e.g., info) into top-level keys
+  const flattenedData = reportData.map((row) => {
+    const flatRow = {};
+    Object.entries(row).forEach(([key, value]) => {
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        Object.entries(value).forEach(([nestedKey, nestedValue]) => {
+          const finalKey = Object.prototype.hasOwnProperty.call(flatRow, nestedKey)
+            ? `${key}_${nestedKey}`
+            : nestedKey;
+          flatRow[finalKey] = nestedValue;
+        });
+      } else {
+        flatRow[key] = value;
+      }
+    });
+    return flatRow;
+  });
+
+  // Keys to exclude from CSV export
+  const excludedKeys = new Set([
+    "userId",
+    "info_id",
+    "id",
+    "signature",
+    "profilePicUrl",
+    "profilePicBase64",
+    "createdAt",
+    "updatedAt",
+    "info_createdAt",
+    "info_updatedAt",
+    "cityLagend",
+    "stateLegend",
+    "socioProCode",
+    "productCodeLegend",
+    "cardType",
+    "titleLegend",
+    "sexLegend",
+  ]);
+
+  // Collect all unique keys across all rows, excluding unwanted ones
+  const keySet = new Set();
+  flattenedData.forEach((row) =>
+    Object.keys(row).forEach((k) => {
+      if (!excludedKeys.has(k)) keySet.add(k);
+    })
+  );
+  const keys = Array.from(keySet);
 
   const csvData = [
     keys.join(","), // CSV header
-    ...reportData.map((row) =>
+    ...flattenedData.map((row) =>
       keys
         .map((key) => {
-          // Handle potential null or undefined values
           let value = row[key];
           if (value === null || value === undefined) {
-            value = ""; // Or handle as you see fit, e.g., 'N/A'
+            value = "";
+          }
+          // Fallback: stringify any remaining objects
+          if (typeof value === "object") {
+            value = JSON.stringify(value);
           }
           // Remove commas from address fields to avoid column breaks
           if (
