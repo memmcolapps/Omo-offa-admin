@@ -12,6 +12,81 @@ import useEditUserData from "../../hooks/useEditUserData";
 import useCompounds from "../../hooks/useCompounds";
 import { useUser } from "../../context/UserContext";
 
+// Helper functions to transform between API and display formats
+const transformApiToDisplay = (value, type) => {
+  if (!value) return "";
+  
+  if (type === "occupation") {
+    // Map API uppercase values to title case display values
+    const occupationMap = {
+      "BANKING": "Banking",
+      "TELECOMMUNICATION": "Telecommunication",
+      "OIL AND GAS": "Oil and Gas",
+      "INFORMATION TECHNOLOGY": "Information Technology",
+      "LEGAL AFFAIRS": "Legal Affairs",
+      "AIRLINES": "Airlines",
+      "ENGINEERING": "Engineering",
+      "MANUFACTURING": "Manufacturing",
+      "ACADEMIC": "Academic",
+      "TRADING": "Trading",
+      "MEDICAL": "Medical",
+      "CIVIL SERVICE": "Civil Service",
+      "MILITARY": "Military",
+      "OTHERS": "Others",
+    };
+    return occupationMap[value] || value;
+  }
+  
+  if (type === "religion") {
+    // Map API uppercase values to title case display values
+    const religionMap = {
+      "ISLAM": "Islam",
+      "CHRISTIANITY": "Christianity",
+      "TRADITIONAL RELIGION": "Traditional Religion",
+    };
+    return religionMap[value] || value;
+  }
+  
+  return value;
+};
+
+const transformDisplayToApi = (value, type) => {
+  if (!value) return "";
+  
+  if (type === "occupation") {
+    // Map display values back to API uppercase format
+    const occupationMap = {
+      "Banking": "BANKING",
+      "Telecommunication": "TELECOMMUNICATION",
+      "Oil and Gas": "OIL AND GAS",
+      "Information Technology": "INFORMATION TECHNOLOGY",
+      "Legal Affairs": "LEGAL AFFAIRS",
+      "Airlines": "AIRLINES",
+      "Engineering": "ENGINEERING",
+      "Manufacturing": "MANUFACTURING",
+      "Academic": "ACADEMIC",
+      "Trading": "TRADING",
+      "Medical": "MEDICAL",
+      "Civil Service": "CIVIL SERVICE",
+      "Military": "MILITARY",
+      "Others": "OTHERS",
+    };
+    return occupationMap[value] || value;
+  }
+  
+  if (type === "religion") {
+    // Map display values back to API format
+    const religionMap = {
+      "Islam": "Islam",
+      "Christianity": "Christianity",
+      "Traditional Religion": "Traditional Religion",
+    };
+    return religionMap[value] || value;
+  }
+  
+  return value;
+};
+
 const UserProfileForm = ({ user, showApproveReject }) => {
   const router = useRouter();
   const { changeStatus, loading } = useChangeUserStatus();
@@ -104,9 +179,16 @@ const UserProfileForm = ({ user, showApproveReject }) => {
         ...editableData
       } = allUserData;
 
+      // Transform API values to display format
+      const transformedData = {
+        ...editableData,
+        occupation: transformApiToDisplay(editableData.occupation, "occupation"),
+        religion: transformApiToDisplay(editableData.religion, "religion"),
+      };
+
       setFormData((prevData) => ({
         ...prevData,
-        ...editableData,
+        ...transformedData,
       }));
     }
   }, [user]);
@@ -160,9 +242,11 @@ const UserProfileForm = ({ user, showApproveReject }) => {
 
       Object.entries(formData).forEach(([key, value]) => {
         if (userInfoFields.includes(key)) {
-          infoData[key] = value;
+          // Transform religion back to API format
+          infoData[key] = key === "religion" ? transformDisplayToApi(value, "religion") : value;
         } else if (key !== "offaNimiId") {
-          userData[key] = value;
+          // Transform occupation back to API format
+          userData[key] = key === "occupation" ? transformDisplayToApi(value, "occupation") : value;
         }
       });
 
@@ -301,16 +385,20 @@ const UserProfileForm = ({ user, showApproveReject }) => {
       name: "occupation",
       type: "select",
       options: [
-        "Unemployed",
-        "Student",
-        "Civil Servant",
-        "Self-Employed",
-        "Trader",
-        "Farmer",
-        "Teacher",
-        "Healthcare Worker",
-        "Engineer",
-        "Other",
+        "Banking",
+        "Telecommunication",
+        "Oil and Gas",
+        "Information Technology",
+        "Legal Affairs",
+        "Airlines",
+        "Engineering",
+        "Manufacturing",
+        "Academic",
+        "Trading",
+        "Medical",
+        "Civil Service",
+        "Military",
+        "Others",
       ],
     },
     {
