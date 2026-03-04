@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { redirect, useRouter } from "next/navigation";
-import { Search, Download } from "lucide-react";
+import { Search, Download, Printer } from "lucide-react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -13,6 +13,7 @@ import {
   downloadApprovedUsersCSV,
   downloadForBankExcel,
 } from "../funcs/DownloadReport";
+import { printAccountForms } from "../funcs/PrintAccountForm";
 
 const ApprovedUsers = () => {
   const { getUsers, data, loading } = useGetUsers();
@@ -119,6 +120,14 @@ const ApprovedUsers = () => {
 
     setSelectedUsers([]);
     setSelectAll(false);
+  }, [filteredUsers, selectedUsers]);
+
+  // Handle print forms
+  const handlePrintForms = useCallback(() => {
+    const selectedUsersData = filteredUsers.filter((user) =>
+      selectedUsers.includes(user.id)
+    );
+    printAccountForms(selectedUsersData);
   }, [filteredUsers, selectedUsers]);
 
   // Handle CSV download
@@ -240,6 +249,23 @@ const ApprovedUsers = () => {
                 {selectedUsers.length === 0
                   ? "Download Excel"
                   : `Download Excel (${selectedUsers.length} selected)`}
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={handlePrintForms}
+                disabled={selectedUsers.length === 0}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                title={
+                  selectedUsers.length === 0
+                    ? "Select users to print"
+                    : `Print forms for ${selectedUsers.length} selected users`
+                }
+              >
+                <Printer className="w-4 h-4" />
+                {selectedUsers.length === 0
+                  ? "Print Forms"
+                  : `Print Forms (${selectedUsers.length} selected)`}
               </Button>
             </div>
           </div>
