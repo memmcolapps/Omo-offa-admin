@@ -32,7 +32,6 @@ export const downloadCSV = (reportData) => {
     "signature",
     "profilePicUrl",
     "profilePicBase64",
-    "createdAt",
     "updatedAt",
     "info_createdAt",
     "info_updatedAt",
@@ -40,7 +39,6 @@ export const downloadCSV = (reportData) => {
     "stateLegend",
     "socioProCode",
     "productCodeLegend",
-    "cardType",
     "titleLegend",
     "sexLegend",
   ]);
@@ -62,6 +60,9 @@ export const downloadCSV = (reportData) => {
           let value = row[key];
           if (value === null || value === undefined) {
             value = "";
+          }
+          if (key === "createdAt" && value) {
+            value = new Date(value).toISOString().split("T")[0];
           }
           // Fallback: stringify any remaining objects
           if (typeof value === "object") {
