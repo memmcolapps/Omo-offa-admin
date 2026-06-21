@@ -193,123 +193,20 @@ export const downloadForBankExcel = (selectedUsers) => {
     return;
   }
 
-  const headers = [
-    "First Name",
-    "Middle Name",
-    "Last Name",
-    "Sex (Sex Legend)",
-    "Marital Status (Marital Status Legend)",
-    "Office Phone No",
-    "Email Address",
-    "GSM No",
-    "Office Address 1",
-    "Office Address 2",
-    "City (City Legend)",
-    "State (State Legend)",
-    "Requesting Branch Code",
-    "Name on Card",
-    "ID Card Type (ID Card Type Legend)",
-    "ID No",
-    "ID Issue Date (dd/mm/yyyy)",
-    "ID Expiry Date(dd/mm/yyyy)",
-    "Socio Prof Code (Socio Prof Code Legend)",
-    "Product Code (Product Code Legend)",
-    "Date of Birth (dd/mm/yyyy)",
-    "Title (Title Code Legend)",
-    "Nationality (Nationality Code Legend)",
-    "Company Name",
-    "OONM Unique ID",
-  ];
+  const headers = ID_CARD_DOWNLOAD_COLUMNS.map((column) => column.header);
 
   const rows = selectedUsers.map((user) => {
-    return headers.map((header) => {
-      let value;
-
-      switch (header) {
-        case "First Name":
-          value = user.firstName || "";
-          break;
-        case "Middle Name":
-          value = user.middleName || "";
-          break;
-        case "Last Name":
-          value = user.lastName || "";
-          break;
-        case "Sex (Sex Legend)":
-          value = user.info?.sexLegend || "";
-          break;
-        case "Email Address":
-          value = user.email || "";
-          break;
-        case "Marital Status (Marital Status Legend)":
-          value = user.info?.maritalStatusLegend || "";
-          break;
-        case "Office Phone No":
-          value = user.phoneNumber || "";
-          break;
-        case "GSM No":
-          value = user.phoneNumber || "";
-          break;
-        case "Office Address 1":
-          value = user.addressOfResidence || "";
-          break;
-        case "Office Address 2":
-          value = user.addressOfResidence || "";
-          break;
-        case "City (City Legend)":
-          value = user.info?.cityLagend || "";
-          break;
-        case "State (State Legend)":
-          value = user.info?.stateLegend || "";
-          break;
-        case "Requesting Branch Code":
-          value = user.info?.requestingBranch || "";
-          break;
-        case "Name on Card":
-          value = `${user.firstName} ${user.lastName}` || "";
-          break;
-        case "ID Card Type (ID Card Type Legend)":
-          value = "02";
-          break;
-        case "ID No":
-          value = user.nin || "";
-          break;
-        case "ID Issue Date (dd/mm/yyyy)":
-          value = user.info?.idIssueDate || "";
-          break;
-        case "ID Expiry Date(dd/mm/yyyy)":
-          value = user.info?.idExpiryDate || "";
-          break;
-        case "Socio Prof Code (Socio Prof Code Legend)":
-          value = user.info?.socioProCode || "";
-          break;
-        case "Product Code (Product Code Legend)":
-          value = user.info?.productCodeLegend || "";
-          break;
-        case "Date of Birth (dd/mm/yyyy)":
-          value = formatDate(user.info?.dob) || "";
-          break;
-        case "Title (Title Code Legend)":
-          value = user.info?.titleLegend || "";
-          break;
-        case "Nationality (Nationality Code Legend)":
-          value = "566";
-          break;
-        case "Company Name":
-          value = "Omo Offa Nimi";
-          break;
-        case "OONM Unique ID":
-          value = user.offaNimiId || "";
-          break;
-        default:
-          value = "";
-      }
-
+    return ID_CARD_DOWNLOAD_COLUMNS.map((column) => {
+      const value = column.value(user);
       return value ?? "";
     });
   });
 
   const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  worksheet["!cols"] = ID_CARD_DOWNLOAD_COLUMNS.map((column) => ({
+    wch: Math.max(column.header.length + 2, 14),
+  }));
+
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Approved Users");
 
@@ -318,6 +215,122 @@ export const downloadForBankExcel = (selectedUsers) => {
     `approved_users_${new Date().toISOString().split("T")[0]}.xlsx`
   );
 };
+
+const ID_CARD_DOWNLOAD_COLUMNS = [
+  { letter: "A", header: "First Name", value: (user) => user.firstName || "" },
+  { letter: "B", header: " Middle Name", value: (user) => user.middleName || "" },
+  { letter: "C", header: "Last Name", value: (user) => user.lastName || "" },
+  {
+    letter: "D",
+    header: "Sex (Sex Legend)",
+    value: (user) => user.info?.sexLegend || "",
+  },
+  {
+    letter: "E",
+    header: "Marital Status (Marital Status Legend)",
+    value: (user) => user.info?.maritalStatusLegend || "",
+  },
+  { letter: "F", header: "Office Phone No", value: (user) => user.phoneNumber || "" },
+  { letter: "G", header: "GSM No", value: (user) => user.phoneNumber || "" },
+  { letter: "H", header: "Email Address", value: (user) => user.email || "" },
+  {
+    letter: "I",
+    header: "Office Address 1",
+    value: (user) => user.addressOfResidence || "",
+  },
+  {
+    letter: "J",
+    header: "Office Address 2",
+    value: (user) => user.addressOfResidence || "",
+  },
+  {
+    letter: "K",
+    header: "City (City Legend)",
+    value: (user) => user.info?.cityLagend || "",
+  },
+  {
+    letter: "L",
+    header: "State (State Legend)",
+    value: (user) => user.info?.stateLegend || "",
+  },
+  {
+    letter: "M",
+    header: "Requesting Branch Code",
+    value: (user) => user.info?.requestingBranch || "",
+  },
+  { letter: "N", header: "Main Account No", value: () => "" },
+  { letter: "O", header: "Other Account No", value: () => "" },
+  { letter: "P", header: "Name on Card", value: (user) => getFullName(user) },
+  { letter: "Q", header: "ID Card Type (ID Card Type Legend)", value: () => "02" },
+  { letter: "R", header: "ID No", value: (user) => user.nin || "" },
+  {
+    letter: "S",
+    header: "ID Issue Date (dd/mm/yyyy)",
+    value: (user) => user.info?.idIssueDate || "",
+  },
+  {
+    letter: "T",
+    header: "ID Expiry Date(dd/mm/yyyy)",
+    value: (user) => user.info?.idExpiryDate || "",
+  },
+  {
+    letter: "U",
+    header: "Socio Prof Code (Socio Prof Code Legend)",
+    value: (user) => user.info?.socioProCode || "",
+  },
+  {
+    letter: "V",
+    header: "Product Code (Product Code Legend)",
+    value: (user) => user.info?.productCodeLegend || "",
+  },
+  {
+    letter: "W",
+    header: "Date of Birth (dd/mm/yyyy)",
+    value: (user) => formatDate(user.info?.dob),
+  },
+  {
+    letter: "X",
+    header: "Title (Title Code Legend)",
+    value: (user) => user.info?.titleLegend || "",
+  },
+  { letter: "Y", header: "Nationality (Nationality Code Legend)", value: () => "566" },
+  {
+    letter: "Z",
+    header: "Batch No (Required if you need to Print Pin in Bulk from PinPro)",
+    value: () => "",
+  },
+  { letter: "AA", header: "Company Name", value: () => "Omo Offa Nimi" },
+  { letter: "AB", header: "OONM ID", value: (user) => user.offaNimiId || "" },
+  { letter: "AC", header: "Compound Name", value: (user) => user.compoundName || "" },
+  {
+    letter: "AD",
+    header: "Next of kin name",
+    value: (user) => user.emergencyContactName || "",
+  },
+  {
+    letter: "AE",
+    header: "Next of kin phone number",
+    value: (user) => user.emergencyContactNumber || "",
+  },
+  { letter: "AF", header: "Full name", value: (user) => getFullName(user) },
+  {
+    letter: "AG",
+    header: "Current Residential Address",
+    value: (user) => user.addressOfResidence || "",
+  },
+  {
+    letter: "AH",
+    header: "Current town/City",
+    value: (user) => user.cityOfResidence || "",
+  },
+  { letter: "AI", header: "Compound name", value: (user) => user.compoundName || "" },
+  { letter: "AJ", header: "Ward name", value: (user) => user.wardName || "" },
+  { letter: "AK", header: "Blood group", value: (user) => user.info?.bloodGroup || "" },
+  { letter: "AL", header: "Genotype", value: (user) => user.genotype || "" },
+];
+
+const getFullName = (user) =>
+  [user.firstName, user.middleName, user.lastName].filter(Boolean).join(" ");
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
