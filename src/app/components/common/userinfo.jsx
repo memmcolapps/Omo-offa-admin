@@ -493,6 +493,10 @@ const UserProfileForm = ({ user, showApproveReject }) => {
     );
   }
 
+  const userFullName =
+    [user.firstName, user.middleName, user.lastName].filter(Boolean).join(" ") ||
+    "User Profile";
+
   return (
     <MaxContainer>
       <ToastContainer />
@@ -535,7 +539,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
               )}
             </div>
             <div>
-              <h2 className="text-2xl font-semibold mb-4">User Profile</h2>
+              <h2 className="text-2xl font-semibold mb-4">{userFullName}</h2>
               {user?.offaNimiId && (
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
