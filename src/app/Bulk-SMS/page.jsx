@@ -3,7 +3,15 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { X, Send, Loader2, Calendar, ChevronLeft, ChevronRight, History } from "lucide-react";
+import {
+  X,
+  Send,
+  Loader2,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  History,
+} from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -46,6 +54,7 @@ const PHONE_REGEX = /^(0[7-9][0-1][0-9]{8})$/;
 const ITEMS_PER_PAGE = 20;
 const MAX_DATE_RANGE_DAYS = 90;
 const MAX_PHONE_NUMBERS = 500;
+const API_BASE_URL = "https://octopus-app-8k2vt.ondigitalocean.app";
 
 const isValidNigerianPhone = (phone) => {
   const cleaned = phone.replace(/\s/g, "");
@@ -56,14 +65,91 @@ const cleanPhoneNumber = (phone) => {
   return phone.replace(/\s/g, "").replace(/[^0-9]/g, "");
 };
 
-const getStatusBadge = (successfulCount, failedCount) => {
-  if (failedCount === 0) {
-    return <Badge className="bg-green-500 hover:bg-green-600">Sent</Badge>;
-  } else if (successfulCount === 0) {
-    return <Badge variant="destructive">Failed</Badge>;
-  } else {
-    return <Badge className="bg-amber-500 hover:bg-amber-600">Partial</Badge>;
+const getArray = (value) => (Array.isArray(value) ? value : []);
+
+const getSubmissionSummary = (log) => {
+  const invalid = getArray(log.invalidNumbers).length;
+  const flooding = getArray(log.floodingNumbers).length;
+  const insufficient = getArray(log.insufficientUnitNumbers).length;
+  const dnd = getArray(log.dndNumbers).length;
+
+  return { invalid, flooding, insufficient, dnd };
+};
+
+const getDeliverySummary = (reports = []) => {
+  return reports.reduce((summary, report) => {
+    const status = report.status || "UNKNOWN";
+    summary[status] = (summary[status] || 0) + 1;
+    return summary;
+  }, {});
+};
+
+const getStatusBadge = (log, reports = []) => {
+  const deliverySummary = getDeliverySummary(reports);
+  const delivered = deliverySummary.DELIVERED || 0;
+  const deliveryFailures = reports.length - delivered;
+  const { invalid, flooding, insufficient } = getSubmissionSummary(log);
+
+  if (reports.length > 0) {
+    if (deliveryFailures === 0) {
+      return (
+        <Badge className="bg-green-500 hover:bg-green-600">Delivered</Badge>
+      );
+    }
+
+    if (delivered === 0) {
+      return <Badge variant="destructive">Delivery Failed</Badge>;
+    }
+
+    return (
+      <Badge className="bg-amber-500 hover:bg-amber-600">Mixed Delivery</Badge>
+    );
   }
+
+  if (insufficient > 0) {
+    return <Badge variant="destructive">Insufficient Units</Badge>;
+  }
+
+  if (flooding > 0) {
+    return <Badge variant="destructive">Flooding</Badge>;
+  }
+
+  if (invalid > 0) {
+    return <Badge variant="destructive">Invalid Numbers</Badge>;
+  }
+
+  if (log.failedCount === 0) {
+    return <Badge className="bg-green-500 hover:bg-green-600">Submitted</Badge>;
+  }
+
+  if (log.successfulCount === 0) {
+    return <Badge variant="destructive">Submission Failed</Badge>;
+  }
+
+  return (
+    <Badge className="bg-amber-500 hover:bg-amber-600">
+      Partial Submission
+    </Badge>
+  );
+};
+
+const renderNumberList = (title, numbers, className = "bg-gray-50") => {
+  if (!numbers || numbers.length === 0) return null;
+
+  return (
+    <div className="border-t pt-4">
+      <h4 className="font-medium mb-2">{title}</h4>
+      <div
+        className={`${className} rounded-lg p-3 max-h-[150px] overflow-y-auto space-y-1`}
+      >
+        {numbers.map((number, index) => (
+          <div key={`${number}-${index}`} className="text-sm font-medium">
+            {number}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 const BulkSMSPage = () => {
@@ -87,6 +173,8 @@ const BulkSMSPage = () => {
   });
   const [toDate, setToDate] = useState(new Date());
   const [selectedLog, setSelectedLog] = useState(null);
+  const [deliveryReports, setDeliveryReports] = useState([]);
+  const [deliveryReportsLoading, setDeliveryReportsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchLogs = React.useCallback(async () => {
@@ -103,14 +191,14 @@ const BulkSMSPage = () => {
       });
 
       const response = await fetch(
-        `https://octopus-app-8k2vt.ondigitalocean.app/api/v1/sms/logs?${queryParams}`,
+        `${API_BASE_URL}/api/v1/sms/logs?${queryParams}`,
         {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -118,7 +206,7 @@ const BulkSMSPage = () => {
       }
 
       const data = await response.json();
-      
+
       if (data.data) {
         setLogs(data.data.logs || []);
         setTotalPages(data.data.pagination?.totalPages || 1);
@@ -130,6 +218,53 @@ const BulkSMSPage = () => {
       setLogsLoading(false);
     }
   }, [currentPage, fromDate, toDate]);
+
+  const fetchDeliveryReports = React.useCallback(async (log) => {
+    const token = localStorage.getItem("token");
+    if (!token || !log) return;
+
+    const queryParams = new URLSearchParams();
+    if (getArray(log.refIds).length > 0) {
+      queryParams.set("refIds", log.refIds.join(","));
+    }
+    if (getArray(log.providerMessageIds).length > 0) {
+      queryParams.set("providerMessageIds", log.providerMessageIds.join(","));
+    }
+    if (getArray(log.normalizedRecipients).length > 0) {
+      queryParams.set("mobiles", log.normalizedRecipients.join(","));
+    }
+
+    if (!queryParams.toString()) {
+      setDeliveryReports([]);
+      return;
+    }
+
+    setDeliveryReportsLoading(true);
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/sms/delivery-reports?${queryParams}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setDeliveryReports(data.data?.reports || []);
+    } catch (error) {
+      toast.error("Failed to load delivery reports");
+      setDeliveryReports([]);
+    } finally {
+      setDeliveryReportsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -150,7 +285,9 @@ const BulkSMSPage = () => {
     if (!cleaned) return;
 
     if (!isValidNigerianPhone(cleaned)) {
-      toast.error(`Invalid phone number: ${value}. Must be 11 digits starting with 070, 080, 081, 090, or 091`);
+      toast.error(
+        `Invalid phone number: ${value}. Must be 11 digits starting with 070, 080, 081, 090, or 091`,
+      );
       return;
     }
 
@@ -167,7 +304,11 @@ const BulkSMSPage = () => {
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
       handleAddPhone(inputValue);
-    } else if (e.key === "Backspace" && !inputValue && phoneNumbers.length > 0) {
+    } else if (
+      e.key === "Backspace" &&
+      !inputValue &&
+      phoneNumbers.length > 0
+    ) {
       const lastNumber = phoneNumbers[phoneNumbers.length - 1];
       setPhoneNumbers(phoneNumbers.slice(0, -1));
       setInputValue(lastNumber);
@@ -177,7 +318,7 @@ const BulkSMSPage = () => {
   const handlePaste = (e) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData("text");
-    
+
     const numbers = pastedData
       .split(/[,\n\s\t]+/)
       .map(cleanPhoneNumber)
@@ -202,7 +343,9 @@ const BulkSMSPage = () => {
     }
 
     if (invalidNumbers.length > 0) {
-      toast.error(`${invalidNumbers.length} invalid number(s) skipped: ${invalidNumbers.slice(0, 3).join(", ")}${invalidNumbers.length > 3 ? "..." : ""}`);
+      toast.error(
+        `${invalidNumbers.length} invalid number(s) skipped: ${invalidNumbers.slice(0, 3).join(", ")}${invalidNumbers.length > 3 ? "..." : ""}`,
+      );
     }
 
     if (duplicates.length > 0) {
@@ -237,20 +380,17 @@ const BulkSMSPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(
-        "https://octopus-app-8k2vt.ondigitalocean.app/api/v1/sms/send-bulk",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            phoneNumbers,
-            message: message.trim(),
-          }),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/api/v1/sms/send-bulk`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          phoneNumbers,
+          message: message.trim(),
+        }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -259,7 +399,7 @@ const BulkSMSPage = () => {
 
       const data = await response.json();
       const { successful, failed, failures } = data.data;
-      
+
       if (failed === 0) {
         toast.success(`SMS sent successfully to ${successful} recipient(s)`);
       } else if (successful === 0) {
@@ -302,7 +442,7 @@ const BulkSMSPage = () => {
     if (date) {
       const maxToDate = new Date(date);
       maxToDate.setDate(maxToDate.getDate() + MAX_DATE_RANGE_DAYS);
-      
+
       if (toDate > maxToDate) {
         setToDate(maxToDate);
       }
@@ -332,17 +472,20 @@ const BulkSMSPage = () => {
 
   const handleRowClick = (log) => {
     setSelectedLog(log);
+    setDeliveryReports([]);
     setIsModalOpen(true);
+    fetchDeliveryReports(log);
   };
 
   const charCount = message.length;
   const isOverLimit = charCount > MAX_SMS_LENGTH;
-  const isNearLimit = charCount > MAX_SMS_LENGTH - 20 && charCount <= MAX_SMS_LENGTH;
+  const isNearLimit =
+    charCount > MAX_SMS_LENGTH - 20 && charCount <= MAX_SMS_LENGTH;
 
   return (
     <div className="container mx-auto p-10 space-y-8">
       <ToastContainer />
-      
+
       {/* Send SMS Section */}
       <Card className="max-w-3xl mx-auto">
         <CardHeader>
@@ -392,7 +535,11 @@ const BulkSMSPage = () => {
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
                   onPaste={handlePaste}
-                  placeholder={phoneNumbers.length === 0 ? "Type phone number and press Enter" : ""}
+                  placeholder={
+                    phoneNumbers.length === 0
+                      ? "Type phone number and press Enter"
+                      : ""
+                  }
                   className="flex-1 min-w-[150px] border-0 shadow-none focus-visible:ring-0 p-0 h-8 text-base"
                   disabled={isLoading}
                 />
@@ -400,11 +547,10 @@ const BulkSMSPage = () => {
             </div>
             <div className="flex justify-between items-center text-sm text-muted-foreground">
               <span>
-                {phoneNumbers.length}/{MAX_PHONE_NUMBERS} number{phoneNumbers.length !== 1 ? "s" : ""} added
+                {phoneNumbers.length}/{MAX_PHONE_NUMBERS} number
+                {phoneNumbers.length !== 1 ? "s" : ""} added
               </span>
-              <span className="text-xs">
-                Format: 08012345678 (11 digits)
-              </span>
+              <span className="text-xs">Format: 08012345678 (11 digits)</span>
             </div>
           </div>
 
@@ -428,8 +574,8 @@ const BulkSMSPage = () => {
                   isOverLimit
                     ? "text-red-500 font-medium"
                     : isNearLimit
-                    ? "text-amber-500"
-                    : "text-muted-foreground"
+                      ? "text-amber-500"
+                      : "text-muted-foreground"
                 }`}
               >
                 {charCount}/{MAX_SMS_LENGTH} characters
@@ -520,10 +666,12 @@ const BulkSMSPage = () => {
                     mode="single"
                     selected={toDate}
                     onSelect={handleToDateChange}
-                    disabled={(date) => 
-                      date > new Date() || 
+                    disabled={(date) =>
+                      date > new Date() ||
                       (fromDate && date < fromDate) ||
-                      (fromDate && (date - fromDate) / (1000 * 60 * 60 * 24) > MAX_DATE_RANGE_DAYS)
+                      (fromDate &&
+                        (date - fromDate) / (1000 * 60 * 60 * 24) >
+                          MAX_DATE_RANGE_DAYS)
                     }
                     initialFocus
                   />
@@ -573,8 +721,14 @@ const BulkSMSPage = () => {
                             {log.recipientsCount} total
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {log.successfulCount} ✓ {log.failedCount} ✗
+                            {log.successfulCount} submitted · {log.failedCount}{" "}
+                            failed
                           </div>
+                          {getSubmissionSummary(log).dnd > 0 && (
+                            <div className="text-xs text-amber-600">
+                              {getSubmissionSummary(log).dnd} DND
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="max-w-[300px] truncate">
@@ -582,10 +736,18 @@ const BulkSMSPage = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          {getStatusBadge(log.successfulCount, log.failedCount)}
+                          <div className="space-y-1">
+                            {getStatusBadge(log)}
+                            <div className="text-xs text-muted-foreground">
+                              Click for provider details
+                            </div>
+                          </div>
                         </TableCell>
                         <TableCell>
-                          {format(new Date(log.createdAt), "MMM dd, yyyy • h:mm a")}
+                          {format(
+                            new Date(log.createdAt),
+                            "MMM dd, yyyy • h:mm a",
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -597,7 +759,8 @@ const BulkSMSPage = () => {
               <div className="flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">
                   Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} -
-                  {Math.min(currentPage * ITEMS_PER_PAGE, totalLogs)} of {totalLogs} results
+                  {Math.min(currentPage * ITEMS_PER_PAGE, totalLogs)} of{" "}
+                  {totalLogs} results
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -630,71 +793,244 @@ const BulkSMSPage = () => {
 
       {/* Detail Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-lg bg-white">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white">
           <DialogHeader>
             <DialogTitle>SMS Details</DialogTitle>
             <DialogDescription>
-              View complete details of the sent message
+              View submission results, provider response, and delivery reports
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedLog && (
             <div className="space-y-4 mt-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Status:</span>
-                {getStatusBadge(selectedLog.successfulCount, selectedLog.failedCount)}
+                <span className="text-sm text-muted-foreground">
+                  Current Status:
+                </span>
+                {getStatusBadge(selectedLog, deliveryReports)}
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Sent By:</span>
                 <span className="font-medium">{selectedLog.adminEmail}</span>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Date:</span>
                 <span>
-                  {format(new Date(selectedLog.createdAt), "MMMM dd, yyyy 'at' h:mm a")}
+                  {format(
+                    new Date(selectedLog.createdAt),
+                    "MMMM dd, yyyy 'at' h:mm a",
+                  )}
                 </span>
               </div>
-              
+
               <div className="border-t pt-4">
-                <h4 className="font-medium mb-2">Recipients:</h4>
+                <h4 className="font-medium mb-2">Submission Summary:</h4>
                 <div className="bg-gray-50 rounded-lg p-3 space-y-1">
                   <div className="flex justify-between text-sm">
                     <span>Total:</span>
-                    <span className="font-medium">{selectedLog.recipientsCount}</span>
+                    <span className="font-medium">
+                      {selectedLog.recipientsCount}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm text-green-600">
-                    <span>Successful:</span>
-                    <span className="font-medium">{selectedLog.successfulCount} ✓</span>
+                    <span>Submitted successfully:</span>
+                    <span className="font-medium">
+                      {selectedLog.successfulCount}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm text-red-600">
-                    <span>Failed:</span>
-                    <span className="font-medium">{selectedLog.failedCount} ✗</span>
+                    <span>Submission failed:</span>
+                    <span className="font-medium">
+                      {selectedLog.failedCount}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm text-red-600">
+                    <span>Invalid:</span>
+                    <span className="font-medium">
+                      {getSubmissionSummary(selectedLog).invalid}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm text-red-600">
+                    <span>Flooding:</span>
+                    <span className="font-medium">
+                      {getSubmissionSummary(selectedLog).flooding}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm text-red-600">
+                    <span>Insufficient units:</span>
+                    <span className="font-medium">
+                      {getSubmissionSummary(selectedLog).insufficient}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm text-amber-600">
+                    <span>DND:</span>
+                    <span className="font-medium">
+                      {getSubmissionSummary(selectedLog).dnd}
+                    </span>
                   </div>
                 </div>
               </div>
-              
+
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-2">Delivery Reports:</h4>
+                {deliveryReportsLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading delivery reports...
+                  </div>
+                ) : deliveryReports.length === 0 ? (
+                  <div className="bg-amber-50 rounded-lg p-3 text-sm text-amber-700">
+                    No delivery report received yet. SmartSMS may still be
+                    processing, or the DLR callback has not posted for this
+                    message.
+                  </div>
+                ) : (
+                  <div className="rounded-md border overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Mobile</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Done</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {deliveryReports.map((report) => (
+                          <TableRow key={report.id}>
+                            <TableCell className="font-medium">
+                              {report.mobile}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                className={
+                                  report.status === "DELIVERED"
+                                    ? "bg-green-500 hover:bg-green-600"
+                                    : ""
+                                }
+                                variant={
+                                  report.status === "DELIVERED"
+                                    ? "default"
+                                    : "destructive"
+                                }
+                              >
+                                {report.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{report.description || "N/A"}</TableCell>
+                            <TableCell>
+                              {report.doneTime
+                                ? format(
+                                    new Date(report.doneTime),
+                                    "MMM dd, yyyy • h:mm a",
+                                  )
+                                : "Pending"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </div>
+
               {selectedLog.failedCount > 0 && selectedLog.failures && (
                 <div className="border-t pt-4">
-                  <h4 className="font-medium mb-2">Failed Numbers:</h4>
+                  <h4 className="font-medium mb-2">Submission Failures:</h4>
                   <div className="bg-red-50 rounded-lg p-3 max-h-[150px] overflow-y-auto space-y-1">
                     {selectedLog.failures.map((failure, index) => (
                       <div key={index} className="text-sm">
                         <span className="font-medium">{failure.phone}</span>
-                        <span className="text-muted-foreground"> - {failure.reason}</span>
+                        {failure.normalized && (
+                          <span className="text-muted-foreground">
+                            {" "}
+                            ({failure.normalized})
+                          </span>
+                        )}
+                        <span className="text-muted-foreground">
+                          {" "}
+                          - {failure.reason}
+                        </span>
+                        {failure.bucket && (
+                          <Badge variant="outline" className="ml-2">
+                            {failure.bucket}
+                          </Badge>
+                        )}
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-              
+
+              {renderNumberList(
+                "Invalid Numbers:",
+                selectedLog.invalidNumbers,
+                "bg-red-50",
+              )}
+              {renderNumberList(
+                "Flooding Numbers:",
+                selectedLog.floodingNumbers,
+                "bg-red-50",
+              )}
+              {renderNumberList(
+                "Insufficient Unit Numbers:",
+                selectedLog.insufficientUnitNumbers,
+                "bg-red-50",
+              )}
+              {renderNumberList(
+                "DND Numbers:",
+                selectedLog.dndNumbers,
+                "bg-amber-50",
+              )}
+              {renderNumberList(
+                "Normalized Recipients:",
+                selectedLog.normalizedRecipients,
+              )}
+
+              {(getArray(selectedLog.refIds).length > 0 ||
+                getArray(selectedLog.providerMessageIds).length > 0) && (
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-2">Provider IDs:</h4>
+                  <div className="bg-gray-50 rounded-lg p-3 space-y-2 text-sm">
+                    {getArray(selectedLog.refIds).length > 0 && (
+                      <div>
+                        <span className="font-medium">Ref IDs:</span>{" "}
+                        <span className="break-all">
+                          {selectedLog.refIds.join(", ")}
+                        </span>
+                      </div>
+                    )}
+                    {getArray(selectedLog.providerMessageIds).length > 0 && (
+                      <div>
+                        <span className="font-medium">Message IDs:</span>{" "}
+                        <span className="break-all">
+                          {selectedLog.providerMessageIds.join(", ")}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="border-t pt-4">
                 <h4 className="font-medium mb-2">Message:</h4>
                 <div className="bg-gray-50 rounded-lg p-3 text-sm whitespace-pre-wrap">
                   {selectedLog.message}
                 </div>
               </div>
+
+              {getArray(selectedLog.providerResponses).length > 0 && (
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-2">Raw Provider Responses:</h4>
+                  <div className="bg-gray-950 text-gray-50 rounded-lg p-3 max-h-[260px] overflow-auto text-xs">
+                    <pre className="whitespace-pre-wrap">
+                      {JSON.stringify(selectedLog.providerResponses, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
