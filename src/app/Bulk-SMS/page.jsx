@@ -84,21 +84,42 @@ const getDeliverySummary = (reports = []) => {
   }, {});
 };
 
+const isDeliveryFailureStatus = (status = "") => {
+  const normalizedStatus = status.toUpperCase();
+  return (
+    normalizedStatus &&
+    normalizedStatus !== "DELIVERED" &&
+    normalizedStatus !== "PENDING" &&
+    normalizedStatus !== "SUBMITTED"
+  );
+};
+
 const getStatusBadge = (log, reports = []) => {
   const deliverySummary = getDeliverySummary(reports);
   const delivered = deliverySummary.DELIVERED || 0;
-  const deliveryFailures = reports.length - delivered;
+  const deliveryFailures = reports.filter((report) =>
+    isDeliveryFailureStatus(report.status),
+  ).length;
+  const pendingReports = reports.length - delivered - deliveryFailures;
   const { invalid, flooding, insufficient } = getSubmissionSummary(log);
 
   if (reports.length > 0) {
-    if (deliveryFailures === 0) {
+    if (delivered === reports.length) {
       return (
         <Badge className="bg-green-500 hover:bg-green-600">Delivered</Badge>
       );
     }
 
-    if (delivered === 0) {
+    if (deliveryFailures > 0 && delivered === 0 && pendingReports === 0) {
       return <Badge variant="destructive">Delivery Failed</Badge>;
+    }
+
+    if (deliveryFailures === 0 && pendingReports > 0) {
+      return (
+        <Badge className="bg-amber-500 hover:bg-amber-600">
+          Delivery Pending
+        </Badge>
+      );
     }
 
     return (
@@ -119,7 +140,11 @@ const getStatusBadge = (log, reports = []) => {
   }
 
   if (log.failedCount === 0) {
-    return <Badge className="bg-green-500 hover:bg-green-600">Submitted</Badge>;
+    return (
+      <Badge className="bg-amber-500 hover:bg-amber-600">
+        Delivery Unknown
+      </Badge>
+    );
   }
 
   if (log.successfulCount === 0) {
@@ -134,19 +159,33 @@ const getStatusBadge = (log, reports = []) => {
 };
 
 const getUndeliveredRecipients = (log, reports = []) => {
-  const delivered = new Set(
+  const deliveryFailed = new Set(
     reports
-      .filter((report) => report.status === "DELIVERED")
+      .filter((report) => isDeliveryFailureStatus(report.status))
       .map((report) => report.mobile),
   );
   const invalid = new Set(getArray(log.invalidNumbers));
   const insufficient = new Set(getArray(log.insufficientUnitNumbers));
+  const submissionFailed = new Set(
+    getArray(log.failures)
+      .filter(
+        (failure) =>
+          failure.bucket !== "invalid" &&
+          failure.bucket !== "insufficient_unit",
+      )
+      .map((failure) => failure.normalized || failure.phone),
+  );
 
   return getArray(log.normalizedRecipients).filter(
     (phone) =>
-      !delivered.has(phone) && !invalid.has(phone) && !insufficient.has(phone),
+      !invalid.has(phone) &&
+      !insufficient.has(phone) &&
+      (deliveryFailed.has(phone) || submissionFailed.has(phone)),
   );
 };
+
+const hasUnknownDelivery = (log, reports = []) =>
+  reports.length === 0 && log.successfulCount > 0;
 
 const renderNumberList = (title, numbers, className = "bg-gray-50") => {
   if (!numbers || numbers.length === 0) return null;
@@ -877,16 +916,14 @@ const BulkSMSPage = () => {
                 <div>
                   <p className="text-sm font-medium">Resend undelivered</p>
                   <p className="text-xs text-muted-foreground">
-                    {
-                      getUndeliveredRecipients(selectedLog, deliveryReports)
-                        .length
-                    }{" "}
-                    recipient
-                    {getUndeliveredRecipients(selectedLog, deliveryReports)
-                      .length === 1
-                      ? ""
-                      : "s"}{" "}
-                    eligible for resend
+                    {hasUnknownDelivery(selectedLog, deliveryReports)
+                      ? "Delivery is unknown because no DLR has been received yet."
+                      : `${getUndeliveredRecipients(selectedLog, deliveryReports).length} recipient${
+                          getUndeliveredRecipients(selectedLog, deliveryReports)
+                            .length === 1
+                            ? ""
+                            : "s"
+                        } eligible for resend`}
                   </p>
                 </div>
                 <Button
@@ -986,9 +1023,10 @@ const BulkSMSPage = () => {
                   </div>
                 ) : deliveryReports.length === 0 ? (
                   <div className="bg-amber-50 rounded-lg p-3 text-sm text-amber-700">
-                    No delivery report received yet. SmartSMS may still be
-                    processing, or the DLR callback has not posted for this
-                    message.
+                    No delivery report has been received for this log. Treat
+                    this as delivery unknown, not failed. Normal resend is
+                    enabled only for explicit submission failures or failed
+                    delivery reports.
                   </div>
                 ) : (
                   <div className="rounded-md border overflow-x-auto">
