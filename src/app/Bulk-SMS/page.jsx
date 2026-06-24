@@ -133,6 +133,21 @@ const getStatusBadge = (log, reports = []) => {
   );
 };
 
+const getUndeliveredRecipients = (log, reports = []) => {
+  const delivered = new Set(
+    reports
+      .filter((report) => report.status === "DELIVERED")
+      .map((report) => report.mobile),
+  );
+  const invalid = new Set(getArray(log.invalidNumbers));
+  const insufficient = new Set(getArray(log.insufficientUnitNumbers));
+
+  return getArray(log.normalizedRecipients).filter(
+    (phone) =>
+      !delivered.has(phone) && !invalid.has(phone) && !insufficient.has(phone),
+  );
+};
+
 const renderNumberList = (title, numbers, className = "bg-gray-50") => {
   if (!numbers || numbers.length === 0) return null;
 
@@ -175,6 +190,7 @@ const BulkSMSPage = () => {
   const [selectedLog, setSelectedLog] = useState(null);
   const [deliveryReports, setDeliveryReports] = useState([]);
   const [deliveryReportsLoading, setDeliveryReportsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchLogs = React.useCallback(async () => {
@@ -426,6 +442,53 @@ const BulkSMSPage = () => {
       toast.error(error.message || "Network error. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendUndelivered = async () => {
+    if (!selectedLog) return;
+
+    const recipients = getUndeliveredRecipients(selectedLog, deliveryReports);
+    if (recipients.length === 0) {
+      toast.info("No undelivered recipients available for resend");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Authentication required");
+      router.push("/");
+      return;
+    }
+
+    setIsResending(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/sms/send-bulk`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          phoneNumbers: recipients,
+          message: selectedLog.message,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      toast.success(
+        `Resend submitted: ${data.data.successful} successful, ${data.data.failed} failed`,
+      );
+      fetchLogs();
+    } catch (error) {
+      toast.error(error.message || "Unable to resend SMS");
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -808,6 +871,47 @@ const BulkSMSPage = () => {
                   Current Status:
                 </span>
                 {getStatusBadge(selectedLog, deliveryReports)}
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
+                <div>
+                  <p className="text-sm font-medium">Resend undelivered</p>
+                  <p className="text-xs text-muted-foreground">
+                    {
+                      getUndeliveredRecipients(selectedLog, deliveryReports)
+                        .length
+                    }{" "}
+                    recipient
+                    {getUndeliveredRecipients(selectedLog, deliveryReports)
+                      .length === 1
+                      ? ""
+                      : "s"}{" "}
+                    eligible for resend
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleResendUndelivered}
+                  disabled={
+                    isResending ||
+                    deliveryReportsLoading ||
+                    getUndeliveredRecipients(selectedLog, deliveryReports)
+                      .length === 0
+                  }
+                  className="bg-[#007250] hover:bg-[#005a3e]"
+                >
+                  {isResending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Resending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      Resend
+                    </>
+                  )}
+                </Button>
               </div>
 
               <div className="flex items-center justify-between">
