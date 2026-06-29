@@ -9,6 +9,7 @@ import React, {
 import { useRouter } from "next/navigation";
 
 import useGetLoggedInAdmin from "../hooks/useAdminLoggedIn";
+import { isCompleteAdmin } from "../utils/adminAccess";
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
@@ -28,8 +29,13 @@ export const UserProvider = ({ children }) => {
     const cachedAdmin = localStorage.getItem("admin");
     if (cachedAdmin) {
       try {
-        setUser(JSON.parse(cachedAdmin));
-        setStatus("authenticated");
+        const parsedAdmin = JSON.parse(cachedAdmin);
+        if (isCompleteAdmin(parsedAdmin)) {
+          setUser(parsedAdmin);
+          setStatus("authenticated");
+        } else {
+          localStorage.removeItem("admin");
+        }
       } catch {
         localStorage.removeItem("admin");
       }
@@ -37,7 +43,9 @@ export const UserProvider = ({ children }) => {
 
     getLoggedInAdmin(token)
       .then((response) => {
-        if (!response?.admin) throw new Error("Admin account not found");
+        if (!isCompleteAdmin(response?.admin)) {
+          throw new Error("Admin account is missing permission data");
+        }
         setUser(response.admin);
         localStorage.setItem("admin", JSON.stringify(response.admin));
         setStatus("authenticated");

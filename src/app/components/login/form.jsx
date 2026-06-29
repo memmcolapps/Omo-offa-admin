@@ -18,6 +18,10 @@ import {
   FormMessage,
 } from "../../components/ui/form";
 import useLogin from "../../hooks/useLogin";
+import {
+  getFirstAccessibleRoute,
+  isCompleteAdmin,
+} from "../../utils/adminAccess";
 import "react-toastify/dist/ReactToastify.css";
 import Navbar from "./homeNavbar";
 
@@ -54,8 +58,13 @@ const Login = () => {
     try {
       const response = await login(values.email, values.password);
       localStorage.setItem("token", response.token);
-      localStorage.setItem("admin", JSON.stringify(response.admin));
-      router.replace("/Dashboard");
+      if (isCompleteAdmin(response.admin)) {
+        localStorage.setItem("admin", JSON.stringify(response.admin));
+        router.replace(getFirstAccessibleRoute(response.admin));
+      } else {
+        localStorage.removeItem("admin");
+        router.replace("/Dashboard");
+      }
     } catch (err) {
       const isCredentialsError = /401|403|credential|password/i.test(
         err?.message || ""

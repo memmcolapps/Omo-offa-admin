@@ -11,8 +11,15 @@ export const ADMIN_ROUTES = [
   { path: "/Action-Logs", permission: ["audit", "view"] },
 ];
 
+export const isCompleteAdmin = (admin) =>
+  Boolean(
+    admin?.id &&
+      (admin.adminType === "superadmin" ||
+        (admin.adminType === "operator" && admin.permissions))
+  );
+
 export const canAccessRoute = (admin, path) => {
-  if (!admin) return false;
+  if (!isCompleteAdmin(admin)) return false;
   if (admin.adminType === "superadmin") return true;
   if (admin.adminType !== "operator") return false;
 
