@@ -4,7 +4,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
-  useRef,
+  useState,
 } from "react";
 import { useRouter } from "next/navigation";
 
@@ -12,30 +12,52 @@ import useGetLoggedInAdmin from "../hooks/useAdminLoggedIn";
 const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
-  const { getLoggedInAdmin, data, loading } = useGetLoggedInAdmin();
+  const { getLoggedInAdmin } = useGetLoggedInAdmin();
   const router = useRouter();
-  const hasInitialized = useRef(false);
+  const [user, setUser] = useState(null);
+  const [status, setStatus] = useState("checking");
 
   useEffect(() => {
-    // Only run once on mount
-    if (hasInitialized.current) return;
-
     const token = localStorage.getItem("token");
-    if (token) {
-      hasInitialized.current = true;
-      getLoggedInAdmin(token);
-    } else {
-      router.push("/");
+    if (!token) {
+      setStatus("unauthenticated");
+      router.replace("/");
+      return;
     }
-  }, []); // Empty dependency array to run only once
 
-  // Memoize the context value to prevent unnecessary re-renders
+    const cachedAdmin = localStorage.getItem("admin");
+    if (cachedAdmin) {
+      try {
+        setUser(JSON.parse(cachedAdmin));
+        setStatus("authenticated");
+      } catch {
+        localStorage.removeItem("admin");
+      }
+    }
+
+    getLoggedInAdmin(token)
+      .then((response) => {
+        if (!response?.admin) throw new Error("Admin account not found");
+        setUser(response.admin);
+        localStorage.setItem("admin", JSON.stringify(response.admin));
+        setStatus("authenticated");
+      })
+      .catch(() => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("admin");
+        setUser(null);
+        setStatus("unauthenticated");
+        router.replace("/");
+      });
+  }, [getLoggedInAdmin, router]);
+
   const contextValue = useMemo(
     () => ({
-      user: data?.admin || null,
-      loading: loading || false,
+      user,
+      status,
+      loading: status === "checking",
     }),
-    [data?.admin, loading]
+    [user, status]
   );
 
   return (

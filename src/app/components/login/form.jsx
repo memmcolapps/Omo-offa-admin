@@ -4,7 +4,7 @@ import { ToastContainer, toast } from "react-toastify";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Input } from "../../components/ui/input";
@@ -35,7 +35,7 @@ const formSchema = z.object({
 const Login = () => {
   const router = useRouter();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const { login, loading, data, error } = useLogin();
+  const { login, loading } = useLogin();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -52,24 +52,21 @@ const Login = () => {
 
   const onSubmit = async (values) => {
     try {
-      await login(values.email, values.password);
+      const response = await login(values.email, values.password);
+      localStorage.setItem("token", response.token);
+      localStorage.setItem("admin", JSON.stringify(response.admin));
+      router.replace("/Dashboard");
     } catch (err) {
-      toast.error("Login failed. Please check your credentials.");
+      const isCredentialsError = /401|403|credential|password/i.test(
+        err?.message || ""
+      );
+      toast.error(
+        isCredentialsError
+          ? "Login failed. Please check your email and password."
+          : "Unable to log in. Please try again."
+      );
     }
   };
-
-  useEffect(() => {
-    if (data?.token) {
-      localStorage.setItem("token", data.token);
-      router.push("/Dashboard");
-    }
-  }, [data, router]);
-
-  useEffect(() => {
-    if (error) {
-      toast.error(error.message || "An error occurred during login");
-    }
-  }, [error]);
 
   return (
     <>

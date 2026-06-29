@@ -1,13 +1,11 @@
 "use client";
 import { useState, useCallback } from "react";
-import { toast } from "react-toastify";
 
 import useFetchAPI from "./useFetch";
 
 const useGetLoggedInAdmin = () => {
   const fetchAPI = useFetchAPI();
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   /**
    *
@@ -27,12 +25,7 @@ const useGetLoggedInAdmin = () => {
         });
 
         const responseData = await response.json();
-
-        setData(responseData);
-      } catch (error) {
-        const networkError = error.message || "Network error";
-        toast.error(networkError);
-        console.error("Network Error:", networkError);
+        return responseData;
       } finally {
         setLoading(false);
       }
@@ -40,7 +33,7 @@ const useGetLoggedInAdmin = () => {
     [fetchAPI]
   );
 
-  return { getLoggedInAdmin, data, loading };
+  return { getLoggedInAdmin, loading };
 };
 
 export default useGetLoggedInAdmin;

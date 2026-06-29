@@ -1,18 +1,30 @@
 "use client";
-import { usePathname } from "next/navigation";
-import { Suspense } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { Suspense, useEffect } from "react";
 
 import { SidebarProvider } from "../components/ui/sidebar";
 import { CustomSidebar } from "../components/common/sidebar";
 import Navbar from "../components/common/navbar";
 import { UserProvider, useUser } from "../context/UserContext";
+import {
+  canAccessRoute,
+  getFirstAccessibleRoute,
+} from "../utils/adminAccess";
 import MainContentSkeleton from "../components/common/main-content-skeleton";
 
-// Component to handle the layout with loading state
 function AppLayout({ children }) {
-  const { loading } = useUser();
+  const { user, status } = useUser();
+  const pathname = usePathname();
+  const router = useRouter();
+  const canAccess = status === "authenticated" && canAccessRoute(user, pathname);
 
-  if (loading) {
+  useEffect(() => {
+    if (status === "authenticated" && !canAccess) {
+      router.replace(getFirstAccessibleRoute(user));
+    }
+  }, [canAccess, router, status, user]);
+
+  if (!canAccess) {
     return (
       <div className="flex h-screen overflow-hidden w-full">
         <CustomSidebar />

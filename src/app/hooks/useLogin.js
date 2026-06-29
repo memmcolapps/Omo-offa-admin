@@ -1,11 +1,10 @@
 "use client";
-import useFetchAPI from "./useFetch";
 import { useState } from "react";
-import { toast } from "react-toastify";
+
+import useFetchAPI from "./useFetch";
 
 const useLogin = () => {
   const fetchAPI = useFetchAPI();
-  const [data, setData] = useState({});
   const [loading, setLoading] = useState(false);
 
   const login = async (email, password) => {
@@ -20,23 +19,17 @@ const useLogin = () => {
       });
 
       const responseData = await response.json();
-      if (responseData.success) {
-        toast.success("Login successful");
-      } else {
-        toast.error("Login failed");
+      if (!responseData.success || !responseData.token) {
+        throw new Error(responseData.error || "Login failed");
       }
 
-      setData(responseData);
-    } catch (error) {
-      const networkError = error.message || "Network error";
-      toast.error(networkError);
-      console.error("Network Error:", networkError);
+      return responseData;
     } finally {
       setLoading(false);
     }
   };
 
-  return { login, data, loading };
+  return { login, loading };
 };
 
 export default useLogin;

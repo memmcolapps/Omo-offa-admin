@@ -25,6 +25,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "../../components/ui/sidebar";
+import { canAccessRoute } from "../../utils/adminAccess";
 import SidebarSkeleton from "./sidebar-skeleton";
 
 const MENU_ITEMS = [
@@ -124,28 +125,19 @@ const MenuItem = React.memo(({ item, isActive }) => (
 MenuItem.displayName = "MenuItem";
 
 const checkPermission = (user, item) => {
-  if (!user) return false;
-  if (user.adminType === "superadmin") return true;
-  if (user.adminType !== "operator") return false;
-
-  return item.permissions
-    ? Object.entries(item.permissions).some(
-        ([category, requirements]) =>
-          (user.permissions?.[category]?.view || false) === true,
-      )
-    : false;
+  return canAccessRoute(user, item.href);
 };
 
 export function CustomSidebar() {
   const pathname = usePathname();
-  const { user, loading } = useUser();
+  const { user, status } = useUser();
 
   const authorizedMenuItems = useMemo(
     () => MENU_ITEMS.filter((item) => checkPermission(user, item)),
     [user],
   );
 
-  if (loading) {
+  if (status !== "authenticated") {
     return <SidebarSkeleton />;
   }
 
