@@ -234,6 +234,8 @@ const UserProfileForm = ({ user, showApproveReject }) => {
         "sex",
         "secondPhoneNumber",
         "bloodGroup",
+        "title",
+        "maritalStatus",
       ];
 
       // Separate user data and userInfo data
@@ -257,11 +259,21 @@ const UserProfileForm = ({ user, showApproveReject }) => {
       };
 
       await editData(payloadToSend, user.offaNimiId, token);
+      sessionStorage.setItem(
+        `user_${user.id}`,
+        JSON.stringify({
+          ...user,
+          ...userData,
+          info: {
+            ...(user.info || {}),
+            ...infoData,
+          },
+        })
+      );
       setIsEditing(false);
       router.back();
     } catch (error) {
       console.error("Error saving changes:", error);
-      toast.error("Error saving changes");
     }
   };
 

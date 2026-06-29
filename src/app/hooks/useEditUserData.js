@@ -33,14 +33,16 @@ const useEditUderData = () => {
       if (responseData.success) {
         toast.success("User data updated successfully");
       } else {
-        toast.error("User data not updated");
+        throw new Error(responseData.error || "User data not updated");
       }
 
       setData(responseData);
+      return responseData;
     } catch (error) {
       const networkError = error.message || "Network error";
       toast.error(networkError);
       console.error("Network Error:", networkError);
+      throw error;
     } finally {
       setLoading(false);
     }
