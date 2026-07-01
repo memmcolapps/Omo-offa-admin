@@ -92,6 +92,7 @@ const generateUserForm = (user, index, total) => {
 
   // Photo
   const profilePic = getValue(user, "profilePicUrl");
+  const signature = getValue(user, "signature");
 
   // Compound / Ward
   const compound = getValue(user, "compoundName");
@@ -193,6 +194,7 @@ const generateUserForm = (user, index, total) => {
         </p>
         <div class="signature-area">
           <div class="sig-line">
+            ${signature ? `<img src="${signature}" class="signature-image" crossorigin="anonymous" alt="Signature" />` : ""}
             <div class="line"></div>
             <span>Signature</span>
           </div>
@@ -350,6 +352,13 @@ export const printAccountForms = (selectedUsers) => {
           border-bottom: 1px solid #333;
           margin-bottom: 4px;
           height: 30px;
+        }
+        .signature-image {
+          display: block;
+          width: 200px;
+          height: 52px;
+          object-fit: contain;
+          margin: -22px auto 0;
         }
         .sig-line span {
           font-size: 10px;

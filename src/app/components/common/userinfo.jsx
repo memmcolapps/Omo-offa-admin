@@ -11,6 +11,7 @@ import useChangeUserStatus from "../../hooks/useChangeUserStatus";
 import useEditUserData from "../../hooks/useEditUserData";
 import useCompounds from "../../hooks/useCompounds";
 import { useUser } from "../../context/UserContext";
+import { UploadDropzone } from "../../../utils/uploadthing";
 
 // Helper functions to transform between API and display formats
 const transformApiToDisplay = (value, type) => {
@@ -99,6 +100,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
   const [editUser, setEditUser] = useState(false);
   const [canApprove, setCanApprove] = useState(false);
   const [status, setStatus] = useState(user?.status);
+  const [signatureUploading, setSignatureUploading] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -1098,6 +1100,95 @@ const UserProfileForm = ({ user, showApproveReject }) => {
             </div>
           </div>
 
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+              Signature
+            </h3>
+            <div className="max-w-xl">
+              {formData.signature ? (
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  {/* A plain img supports both UploadThing URLs and legacy data URLs. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={formData.signature}
+                    alt={`${userFullName} signature`}
+                    className="h-24 w-full object-contain"
+                  />
+                  {isEditing && editUser && (
+                    <button
+                      type="button"
+                      className="mt-3 px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+                      onClick={() =>
+                        setFormData((current) => ({
+                          ...current,
+                          signature: "",
+                        }))
+                      }
+                    >
+                      Remove signature
+                    </button>
+                  )}
+                </div>
+              ) : isEditing && editUser ? (
+                <UploadDropzone
+                  endpoint="userSignature"
+                  headers={() => {
+                    const token = localStorage.getItem("token");
+                    return token
+                      ? { Authorization: `Bearer ${token}` }
+                      : {};
+                  }}
+                  onUploadBegin={() => setSignatureUploading(true)}
+                  onClientUploadComplete={(files) => {
+                    setSignatureUploading(false);
+                    const signatureUrl =
+                      files?.[0]?.ufsUrl ||
+                      files?.[0]?.url ||
+                      files?.[0]?.serverData?.url;
+
+                    if (!signatureUrl) {
+                      toast.error(
+                        "The signature uploaded, but no file URL was returned"
+                      );
+                      return;
+                    }
+
+                    setFormData((current) => ({
+                      ...current,
+                      signature: signatureUrl,
+                    }));
+                    toast.success("Signature uploaded. Save changes to attach it.");
+                  }}
+                  onUploadError={(error) => {
+                    setSignatureUploading(false);
+                    toast.error(error.message || "Signature upload failed");
+                  }}
+                  appearance={{
+                    container:
+                      "border-2 border-dashed border-[#002E20] bg-[#EFFFEE] rounded-lg p-6",
+                    label: "text-[#002E20]",
+                    allowedContent: "text-gray-600",
+                    button:
+                      "bg-[#002E20] text-white ut-ready:bg-[#002E20] ut-uploading:cursor-not-allowed",
+                  }}
+                  content={{
+                    label: "Upload the user's signature",
+                    allowedContent: "PNG, JPG or WebP up to 2MB",
+                  }}
+                />
+              ) : (
+                <p className="text-sm text-gray-500">
+                  No signature has been uploaded for this user.
+                </p>
+              )}
+              {signatureUploading && (
+                <p className="mt-2 text-sm text-gray-600">
+                  Uploading signature…
+                </p>
+              )}
+            </div>
+          </div>
+
           {/* Additional Information Section - Dynamic fields not in predefined sections */}
           {(() => {
             const definedFieldNames = new Set(formFields.map((f) => f.name));
@@ -1116,6 +1207,7 @@ const UserProfileForm = ({ user, showApproveReject }) => {
               "createdAt",
               "updatedAt",
               "info",
+              "signature",
             ]);
 
             const additionalFields = Object.entries(formData).filter(
