@@ -26,6 +26,7 @@ const ApprovedUsers = () => {
   const [debouncedFilter, setDebouncedFilter] = useState("");
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const isInitialLoading = loading && !Array.isArray(data?.users);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -197,7 +198,7 @@ const ApprovedUsers = () => {
   return (
     <div className="p-10 w-full">
       <ToastContainer />
-      {loading ? (
+      {isInitialLoading ? (
         <div className="text-2xl">Loading...</div> // Loading state
       ) : (
         <>
@@ -216,6 +217,11 @@ const ApprovedUsers = () => {
                   className="pl-12 pr-4 py-5 w-full text-lg rounded-full border-2 border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all duration-300 ease-in-out placeholder-gray-400 font-medium"
                 />
               </div>
+              {loading && (
+                <p className="mt-2 text-sm text-gray-500" role="status">
+                  Searching…
+                </p>
+              )}
             </div>
             <div className="flex gap-2">
               <Button
