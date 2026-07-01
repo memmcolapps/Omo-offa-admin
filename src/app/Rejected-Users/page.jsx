@@ -14,36 +14,37 @@ const RejectedUsers = () => {
   const limit = 20;
   const router = useRouter();
   const [filter, setFilter] = useState("");
+  const [debouncedFilter, setDebouncedFilter] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      getUsers("REJECTED", token, currentPage, limit);
+      getUsers("REJECTED", token, currentPage, limit, debouncedFilter);
     } else {
       router.push("/");
     }
-  }, [currentPage]);
+  }, [currentPage, debouncedFilter, getUsers, router]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedFilter(filter.trim());
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [filter]);
+
   useEffect(() => {
     if (data) {
-      setUsers(data.users);
-      // Since API doesn't provide totalPages, we'll calculate it based on hasMore
-      const estimatedTotalPages = data.pagination?.hasMore
-        ? currentPage + 1
-        : currentPage;
-      setTotalPages(estimatedTotalPages);
+      setUsers(data.users || []);
+      setTotalPages(data.pagination?.totalPages || 1);
     }
-  }, [data, currentPage]);
-
-  const filteredUsers = users?.filter((user) =>
-    user.offaNimiId.toLowerCase().includes(filter.toLowerCase())
-  );
+  }, [data]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) {
+    if (data?.pagination?.hasNextPage && currentPage < totalPages) {
       handlePageChange(currentPage + 1);
     }
   };
@@ -79,7 +80,10 @@ const RejectedUsers = () => {
               <Input
                 type="text"
                 value={filter}
-                onChange={(e) => setFilter(e.target.value)}
+                onChange={(e) => {
+                  setFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
                 placeholder="Search by OffaNimiID"
                 className="pl-12 pr-4 py-5 w-full text-lg rounded-full border-2 border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all duration-300 ease-in-out placeholder-gray-400 font-medium"
               />
@@ -87,19 +91,16 @@ const RejectedUsers = () => {
           </div>
           <ReusableTable
             columns={columns}
-            data={filteredUsers}
+            data={users}
             currentPage={currentPage}
             totalPages={totalPages}
-            totalItems={
-              data.pagination?.hasMore
-                ? currentPage * limit + 1
-                : (currentPage - 1) * limit + (data.users?.length || 0)
-            }
+            totalItems={data.pagination?.totalItems || 0}
             handlePrevPage={handlePrevPage}
             handleNextPage={handleNextPage}
             handleRowClick={handleRowClick}
-            hasMore={data.pagination?.hasMore || false}
-            hasPrevious={currentPage > 1}
+            hasMore={data.pagination?.hasNextPage || false}
+            hasPrevious={data.pagination?.hasPreviousPage || false}
+            itemsPerPage={limit}
           />
         </>
       )}

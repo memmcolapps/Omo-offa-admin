@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 import useCompounds from "../hooks/useCompounds";
 
 import { Button } from "../components/ui/button";
@@ -27,16 +27,15 @@ export default function CompoundsPage() {
     addCompound,
     updateCompound,
     deleteCompound,
-    token,
-    setToken,
     loading,
-    error,
+    pagination,
     loadCompounds,
   } = useCompounds();
   const [form, setForm] = useState({ id: "", name: "" });
   const [isEditing, setIsEditing] = useState(false);
   // UI helpers: search and pagination
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const PER_PAGE = 25;
 
@@ -72,23 +71,22 @@ export default function CompoundsPage() {
     setForm((f) => ({ ...f, [field]: e.target.value }));
   };
 
-  // Filtering and pagination logic
-  const filteredCompounds = compounds.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase()),
-  );
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredCompounds.length / PER_PAGE),
-  );
-  const paginatedCompounds = filteredCompounds.slice(
-    (currentPage - 1) * PER_PAGE,
-    currentPage * PER_PAGE,
-  );
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [search]);
 
   useEffect(() => {
-    loadCompounds();
-    if (currentPage > totalPages) setCurrentPage(totalPages);
-  }, [totalPages, currentPage]);
+    loadCompounds({
+      page: currentPage,
+      limit: PER_PAGE,
+      search: debouncedSearch,
+    });
+  }, [currentPage, debouncedSearch, loadCompounds]);
+
+  const totalPages = pagination.totalPages || 1;
 
   return (
     <div className="container mx-auto p-10 space-y-8">
@@ -144,7 +142,7 @@ export default function CompoundsPage() {
               }}
             />
             <span className="text-sm text-muted-foreground ml-2 hidden sm:inline">
-              {filteredCompounds.length} results
+              {pagination.totalItems} results
             </span>
           </div>
           <Table>
@@ -155,7 +153,7 @@ export default function CompoundsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedCompounds.map((c) => (
+              {compounds.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell>{c.name}</TableCell>
                   <TableCell className="flex justify-end w-full">
@@ -197,7 +195,7 @@ export default function CompoundsPage() {
                 onClick={() =>
                   setCurrentPage((p) => Math.min(totalPages, p + 1))
                 }
-                disabled={currentPage === totalPages}
+                disabled={!pagination.hasNextPage || loading}
               >
                 Next
               </Button>

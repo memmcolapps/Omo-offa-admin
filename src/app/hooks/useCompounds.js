@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { toast } from "react-toastify";
 
 import useFetchAPI from "./useFetch";
@@ -9,16 +9,43 @@ const useCompounds = () => {
   const [compounds, setCompounds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalItems: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
+  const queryRef = useRef({ page: 1, limit: 25, search: "" });
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-  const loadCompounds = useCallback(async () => {
+  const loadCompounds = useCallback(async (options = {}) => {
     try {
       setLoading(true);
-      const response = await fetchAPI("api/v1/admin/compounds", {});
+      const queryValues = { ...queryRef.current, ...options };
+      queryRef.current = queryValues;
+      const query = new URLSearchParams({
+        page: String(queryValues.page),
+        limit: String(queryValues.limit),
+      });
+      if (queryValues.search.trim()) {
+        query.set("search", queryValues.search.trim());
+      }
+      const response = await fetchAPI(
+        `api/v1/admin/compounds?${query.toString()}`,
+        {},
+      );
       const data = await response.json();
       if (data.success) {
         setCompounds(data.compounds);
+        setPagination({
+          currentPage: data.pagination?.currentPage || 1,
+          totalItems: data.pagination?.totalItems || 0,
+          totalPages: data.pagination?.totalPages || 1,
+          hasNextPage: data.pagination?.hasNextPage || false,
+          hasPreviousPage: data.pagination?.hasPreviousPage || false,
+        });
       } else {
         setError(data.message || "Failed to load compounds");
       }
@@ -42,7 +69,7 @@ const useCompounds = () => {
       });
       const data = await response.json();
       if (data.success) {
-        setCompounds((prev) => [...prev, data.compound]);
+        await loadCompounds();
         toast.success("Compound added successfully");
       } else {
         toast.error(data.message || "Failed to add compound");
@@ -67,11 +94,7 @@ const useCompounds = () => {
       });
       const data = await response.json();
       if (data.success) {
-        setCompounds((prev) =>
-          prev.map((compound) =>
-            compound.id === id ? { ...compound, name } : compound,
-          ),
-        );
+        await loadCompounds();
         toast.success("Compound updated successfully");
       } else {
         toast.error(data.message || "Failed to update compound");
@@ -94,7 +117,7 @@ const useCompounds = () => {
       });
       const data = await response.json();
       if (data.success) {
-        setCompounds((prev) => prev.filter((compound) => compound.id !== id));
+        await loadCompounds();
         toast.success("Compound deleted successfully");
       } else {
         toast.error(data.message || "Failed to delete compound");
@@ -114,6 +137,7 @@ const useCompounds = () => {
 
     loading,
     error,
+    pagination,
     loadCompounds,
   };
 };

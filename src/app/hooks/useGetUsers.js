@@ -14,31 +14,40 @@ const useGetUsers = () => {
    * @param {*} token
    */
 
-  const getUsers = useCallback(async (status, token, page, limit) => {
-    try {
-      setLoading(true);
-      const response = await fetchAPI(
-        `api/v1/user/all-users-flag?status=${status}&page=${page}&limit=${limit}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  const getUsers = useCallback(
+    async (status, token, page, limit, search = "") => {
+      try {
+        setLoading(true);
+        const query = new URLSearchParams({
+          status,
+          page: String(page),
+          limit: String(limit),
+        });
+        if (search.trim()) query.set("search", search.trim());
 
-      const responseData = await response.json();
+        const response = await fetchAPI(
+          `api/v1/user/all-users-flag?${query.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-      setData(responseData);
-    } catch (error) {
-      const networkError = error.message || "Network error";
-      toast.error(networkError);
-      console.error("Network Error:", networkError);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        const responseData = await response.json();
+        setData(responseData);
+      } catch (error) {
+        const networkError = error.message || "Network error";
+        toast.error(networkError);
+        console.error("Network Error:", networkError);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchAPI]
+  );
 
   return { getUsers, data, loading };
 };

@@ -27,9 +27,9 @@ export function ReusableTable({
   onSelectionChange,
   selectAll = false,
   onSelectAll,
+  itemsPerPage = 20,
 }) {
   // Calculate the range of items being shown
-  const itemsPerPage = 20;
   const safeTotalItems = totalItems || 0;
   const startItem = data?.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
   const endItem =

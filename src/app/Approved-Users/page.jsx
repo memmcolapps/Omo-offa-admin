@@ -23,41 +23,38 @@ const ApprovedUsers = () => {
   const limit = 20;
   const router = useRouter();
   const [filter, setFilter] = useState("");
+  const [debouncedFilter, setDebouncedFilter] = useState("");
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      getUsers("APPROVED", token, currentPage, limit);
+      getUsers("APPROVED", token, currentPage, limit, debouncedFilter);
     } else {
       redirect("/");
     }
-  }, [currentPage, getUsers, limit]);
+  }, [currentPage, debouncedFilter, getUsers, limit]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedFilter(filter.trim());
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [filter]);
 
   useEffect(() => {
     if (data) {
-      setUsers(data.users);
-
-      const estimatedTotalPages = data.pagination?.hasMore
-        ? currentPage + 1
-        : currentPage;
-      setTotalPages(estimatedTotalPages);
+      setUsers(data.users || []);
+      setTotalPages(data.pagination?.totalPages || 1);
     }
-  }, [data, currentPage]);
+  }, [data]);
 
   // Reset selection when page changes or filter changes
   useEffect(() => {
     setSelectedUsers([]);
     setSelectAll(false);
   }, [currentPage, filter]);
-
-  // Memoize the filtered list of users based on the search filter.
-  const filteredUsers = useMemo(() => {
-    return users?.filter((user) =>
-      user.offaNimiId.toLowerCase().includes(filter.toLowerCase())
-    );
-  }, [users, filter]);
 
   // Handlers for pagination using useCallback.
   const handlePageChange = useCallback((page) => {
@@ -66,10 +63,10 @@ const ApprovedUsers = () => {
 
   const handleNextPage = useCallback(() => {
     // Allow next page if hasMore is true or if we're not on the last page
-    if (data?.pagination?.hasMore || currentPage < totalPages) {
+    if (data?.pagination?.hasNextPage || currentPage < totalPages) {
       handlePageChange(currentPage + 1);
     }
-  }, [currentPage, totalPages, handlePageChange, data?.pagination?.hasMore]);
+  }, [currentPage, totalPages, handlePageChange, data?.pagination?.hasNextPage]);
 
   const handlePrevPage = useCallback(() => {
     if (currentPage > 1) {
@@ -102,44 +99,44 @@ const ApprovedUsers = () => {
     (checked) => {
       setSelectAll(checked);
       if (checked) {
-        const allUserIds = filteredUsers.map((user) => user.id);
+        const allUserIds = users.map((user) => user.id);
         setSelectedUsers(allUserIds);
       } else {
         setSelectedUsers([]);
       }
     },
-    [filteredUsers]
+    [users]
   );
 
   // Handle Excel download
   const handleDownloadExcel = useCallback(() => {
-    const selectedUsersData = filteredUsers.filter((user) =>
+    const selectedUsersData = users.filter((user) =>
       selectedUsers.includes(user.id)
     );
     downloadForBankExcel(selectedUsersData);
 
     setSelectedUsers([]);
     setSelectAll(false);
-  }, [filteredUsers, selectedUsers]);
+  }, [users, selectedUsers]);
 
   // Handle print forms
   const handlePrintForms = useCallback(() => {
-    const selectedUsersData = filteredUsers.filter((user) =>
+    const selectedUsersData = users.filter((user) =>
       selectedUsers.includes(user.id)
     );
     printAccountForms(selectedUsersData);
-  }, [filteredUsers, selectedUsers]);
+  }, [users, selectedUsers]);
 
   // Handle CSV download
   const handleDownloadCSV = useCallback(() => {
-    const selectedUsersData = filteredUsers.filter((user) =>
+    const selectedUsersData = users.filter((user) =>
       selectedUsers.includes(user.id)
     );
     downloadApprovedUsersCSV(selectedUsersData);
 
     setSelectedUsers([]);
     setSelectAll(false);
-  }, [filteredUsers, selectedUsers]);
+  }, [users, selectedUsers]);
 
   const columns = useMemo(
     () => [
@@ -211,7 +208,10 @@ const ApprovedUsers = () => {
                 <Input
                   type="text"
                   value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
+                  onChange={(e) => {
+                    setFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
                   placeholder="Search by OffaNimiID"
                   className="pl-12 pr-4 py-5 w-full text-lg rounded-full border-2 border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all duration-300 ease-in-out placeholder-gray-400 font-medium"
                 />
@@ -271,20 +271,17 @@ const ApprovedUsers = () => {
           </div>
           <ReusableTable
             columns={columns}
-            data={filteredUsers}
+            data={users}
             currentPage={currentPage}
             totalPages={totalPages}
-            totalItems={
-              data.pagination?.hasMore
-                ? currentPage * limit + 1
-                : (currentPage - 1) * limit + (data.users?.length || 0)
-            }
+            totalItems={data.pagination?.totalItems || 0}
             handlePrevPage={handlePrevPage}
             handleNextPage={handleNextPage}
             handleRowClick={handleRowClick}
             emptyMessage="No users found."
-            hasMore={data.pagination?.hasMore || false}
-            hasPrevious={currentPage > 1}
+            hasMore={data.pagination?.hasNextPage || false}
+            hasPrevious={data.pagination?.hasPreviousPage || false}
+            itemsPerPage={limit}
             enableSelection={true}
             selectedItems={selectedUsers}
             onSelectionChange={handleUserSelection}
